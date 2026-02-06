@@ -1,0 +1,30 @@
+{
+  "name": "yolobox",
+  "version": "0.0.1",
+  "description": "Run Claude Code in a Docker container with --dangerously-skip-permissions. YOLO safely.",
+  "main": "index.js",
+  "bin": {
+    "yolobox": "./index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/roginn/yolobox.git"
+  },
+  "keywords": [
+    "claude",
+    "code",
+    "sandbox",
+    "docker",
+    "container",
+    "cli"
+  ],
+  "author": "Roger Garcia <npm@rawrger.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/roginn/yolobox/issues"
+  },
+  "homepage": "https://github.com/roginn/yolobox#readme"
+}
