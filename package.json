@@ -2,12 +2,34 @@
   "name": "yolobox",
   "version": "0.0.1",
   "description": "Run Claude Code in a Docker container with --dangerously-skip-permissions. YOLO safely.",
-  "main": "index.js",
+  "type": "module",
   "bin": {
-    "yolobox": "./index.js"
+    "yolobox": "./bin/yolobox.js"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "docker:build": "docker build -t yolobox:local -f docker/Dockerfile docker/",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "citty": "^0.1.6",
+    "@clack/prompts": "^0.9.1",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsup": "^8.3.0",
+    "vitest": "^2.1.0",
+    "@types/node": "^22.0.0"
   },
   "repository": {
     "type": "git",
