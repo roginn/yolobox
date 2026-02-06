@@ -17,8 +17,7 @@ When you run `yolobox run` inside a git repo:
 1. A human-friendly ID is generated (e.g., `swift-falcon`)
 2. A git worktree is created at `.yolobox/swift-falcon/` on branch `swift-falcon`
 3. A Docker container spins up with that worktree mounted as `/workspace`
-4. SSH agent is forwarded so Claude can push/pull using your keys
-5. Claude Code starts with `--dangerously-skip-permissions`
+4. Claude Code starts with `--dangerously-skip-permissions`
 
 You can spin up as many yoloboxes as you want — each one works on its own
 branch, so they never step on each other's toes.
@@ -70,7 +69,6 @@ $ yolobox run
   ✓ Docker is running
   ✓ Image ghcr.io/roginn/yolobox:latest (cached)
   ✓ Created worktree .yolobox/swift-falcon (branch: swift-falcon)
-  ✓ SSH agent forwarded
 
   Launching swift-falcon...
 
@@ -188,30 +186,10 @@ are determined by combining `docker ps --filter name=yolobox-*` with
 | Host Path | Container Path | Purpose |
 |-----------|---------------|---------|
 | `.yolobox/<id>/` | `/workspace` | Git worktree (read/write) |
-| SSH agent socket | `/ssh-agent` | SSH key forwarding |
 
 **Not mounted:**
 - `~/.claude` — user authenticates inside the container each time
 - `~/.gitconfig` — git identity is configured via entrypoint
-
-### SSH Agent Forwarding
-
-Platform-aware socket mounting:
-
-**macOS (Docker Desktop):**
-```bash
--v /run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock
--e SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
-```
-
-**Linux:**
-```bash
--v $SSH_AUTH_SOCK:/ssh-agent
--e SSH_AUTH_SOCK=/ssh-agent
-```
-
-The CLI detects the platform and uses the correct flags. On macOS, Docker
-Desktop provides a magic socket that bridges to the host's SSH agent.
 
 ### Container Naming
 
@@ -232,14 +210,12 @@ Based on the existing enclaude Dockerfile:
 - Utilities (git, curl, wget, jq, ripgrep, fd-find, vim)
 - Claude Code (preinstalled via native installer)
 - Non-root `dev` user with passwordless sudo
-- SSH client configured for agent forwarding
 
 ### Entrypoint
 
 The entrypoint script:
 1. Configures git identity (from env vars passed by the CLI)
-2. Ensures SSH agent socket is accessible
-3. Execs into the requested command (claude or bash)
+2. Execs into the requested command (claude or bash)
 
 ---
 
@@ -300,7 +276,6 @@ yolobox/
 │       ├── docker.ts             # Docker interactions (run, ps, stop, pull)
 │       ├── worktree.ts           # Git worktree operations
 │       ├── id.ts                 # ID generation (adjective-noun)
-│       ├── ssh.ts                # SSH agent forwarding (platform-aware)
 │       ├── git.ts                # Git helpers (identity, branch status)
 │       └── ui.ts                 # Styled output, banners, formatters
 │
@@ -449,7 +424,6 @@ The CLI should fail gracefully with clear, actionable messages:
 | Docker not running | `Docker is not running. Start Docker Desktop and try again.` |
 | Not a git repo | `Not a git repo. yolobox needs git worktrees — run this inside a repo.` |
 | Image not cached | Shows pull progress with spinner |
-| SSH agent not available | `No SSH agent detected. Git push/pull won't work inside the container.` (warning, not a blocker) |
 | Worktree name conflict | Generates a new ID and retries |
 
 ---

@@ -20,12 +20,10 @@ yolobox run --name cool-tiger        # Use a specific ID instead of random
    existing branches and worktrees. Retry on collision (max 100 attempts).
 4. **Create worktree** — `git worktree add .yolobox/<id> -b <id>` from HEAD.
 5. **Ensure .gitignore** — Add `.yolobox/` if not already present.
-6. **SSH forwarding** — Detect platform (macOS vs Linux) and configure socket mount.
-   Warn (don't fail) if no SSH agent detected.
-7. **Git identity** — Read `user.name` and `user.email` from host's git config.
+6. **Git identity** — Read `user.name` and `user.email` from host's git config.
    Pass as env vars (`GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`,
    `GIT_COMMITTER_EMAIL`).
-8. **Launch container** — `docker run -it --rm` with worktree mounted at `/workspace`
+7. **Launch container** — `docker run -it --rm` with worktree mounted at `/workspace`
    and the repo's `.git` dir mounted at `/repo/.git`. The entrypoint
    rewrites the worktree's `.git` pointer to use the container path. Block until
    container exits.
@@ -66,8 +64,6 @@ $ yolobox run
 │
 ◆  Created worktree .yolobox/swift-falcon (branch: swift-falcon)
 │
-◆  SSH agent forwarded
-│
 └  Launching swift-falcon...
 
 > (Claude Code session starts)
@@ -96,7 +92,6 @@ which worktree to fix up.
 |-----------|---------|
 | Docker not running | `Docker is not running. Start Docker Desktop and try again.` |
 | Not a git repo | `Not a git repo. yolobox needs git worktrees — run this inside a repo.` |
-| No SSH agent | `No SSH agent detected. Git push/pull won't work inside the container.` (warning) |
 
 ## Implementation Files
 
@@ -105,7 +100,6 @@ which worktree to fix up.
 - `src/lib/git.ts` — Git repo checks and identity
 - `src/lib/worktree.ts` — Worktree creation and .gitignore management
 - `src/lib/id.ts` — ID generation with word lists
-- `src/lib/ssh.ts` — Platform-aware SSH agent forwarding
 - `src/lib/ui.ts` — Styled terminal output
 - `docker/Dockerfile` — Container image definition
 - `docker/entrypoint.sh` — Container startup script

@@ -6,7 +6,6 @@ function makeOpts(overrides: Partial<DockerRunOptions> = {}): DockerRunOptions {
     id: 'swift-falcon',
     worktreePath: '/home/user/project/.yolobox/swift-falcon',
     gitDir: '/home/user/project/.git',
-    ssh: null,
     gitIdentity: { name: 'Test User', email: 'test@example.com' },
     image: 'yolobox:local',
     command: ['claude', '--dangerously-skip-permissions'],
@@ -46,23 +45,6 @@ describe('buildDockerArgs', () => {
     expect(args).toContain('GIT_AUTHOR_EMAIL=test@example.com')
     expect(args).toContain('GIT_COMMITTER_NAME=Test User')
     expect(args).toContain('GIT_COMMITTER_EMAIL=test@example.com')
-  })
-
-  it('includes SSH args when provided', () => {
-    const args = buildDockerArgs(makeOpts({
-      ssh: {
-        volumeMount: '/run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock',
-        envVar: '/run/host-services/ssh-auth.sock',
-      },
-    }))
-    expect(args).toContain('/run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock')
-    expect(args).toContain('SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock')
-  })
-
-  it('omits SSH args when null', () => {
-    const args = buildDockerArgs(makeOpts({ ssh: null }))
-    const sshRelated = args.filter(a => a.includes('SSH_AUTH_SOCK'))
-    expect(sshRelated).toHaveLength(0)
   })
 
   it('uses shell command when specified', () => {

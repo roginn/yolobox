@@ -3,7 +3,6 @@ import * as ui from '../lib/ui'
 import * as git from '../lib/git'
 import * as docker from '../lib/docker'
 import * as worktree from '../lib/worktree'
-import * as ssh from '../lib/ssh'
 import { generateId } from '../lib/id'
 
 const DOCKER_IMAGE = process.env.YOLOBOX_IMAGE || 'yolobox:local'
@@ -68,14 +67,6 @@ export default defineCommand({
     // Ensure .gitignore
     worktree.ensureGitignore(repoRoot)
 
-    // SSH forwarding
-    const sshArgs = ssh.getSSHForwardingArgs()
-    if (sshArgs) {
-      ui.success('SSH agent forwarded')
-    } else {
-      ui.warn('No SSH agent detected. Git push/pull won\'t work inside the container.')
-    }
-
     // Git identity
     const gitIdentity = git.getGitIdentity()
 
@@ -96,7 +87,6 @@ export default defineCommand({
       id,
       worktreePath,
       gitDir,
-      ssh: sshArgs,
       gitIdentity,
       image: DOCKER_IMAGE,
       command,

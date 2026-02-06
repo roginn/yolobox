@@ -21,18 +21,4 @@ if [ -n "${GIT_AUTHOR_EMAIL:-}" ]; then
   git config --global user.email "$GIT_AUTHOR_EMAIL"
 fi
 
-# Ensure SSH agent socket is accessible
-if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -e "$SSH_AUTH_SOCK" ]; then
-  ssh-add -l >/dev/null 2>&1 || true
-fi
-
-# Configure SSH to skip host key verification for github.com
-mkdir -p ~/.ssh
-cat > ~/.ssh/config <<'SSHEOF'
-Host github.com
-  StrictHostKeyChecking no
-  UserKnownHostsFile /dev/null
-SSHEOF
-chmod 600 ~/.ssh/config
-
 exec "$@"
