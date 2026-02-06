@@ -30,9 +30,9 @@ describe('buildDockerArgs', () => {
     expect(args[vIdx + 1]).toBe('/home/user/project/.yolobox/swift-falcon:/workspace')
   })
 
-  it('mounts .git dir as /workspace/.git-main', () => {
+  it('mounts .git dir as /repo/.git', () => {
     const args = buildDockerArgs(makeOpts())
-    expect(args).toContain('/home/user/project/.git:/workspace/.git-main')
+    expect(args).toContain('/home/user/project/.git:/repo/.git')
   })
 
   it('passes YOLOBOX_ID env var', () => {

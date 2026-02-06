@@ -25,7 +25,7 @@ export function buildDockerArgs(opts: DockerRunOptions): string[] {
     'run', '-it', '--rm',
     '--name', `yolobox-${opts.id}`,
     '-v', `${opts.worktreePath}:/workspace`,
-    '-v', `${opts.gitDir}:/workspace/.git-main`,
+    '-v', `${opts.gitDir}:/repo/.git`,
     '-e', `YOLOBOX_ID=${opts.id}`,
   ]
 

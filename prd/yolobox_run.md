@@ -26,7 +26,7 @@ yolobox run --name cool-tiger        # Use a specific ID instead of random
    Pass as env vars (`GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`,
    `GIT_COMMITTER_EMAIL`).
 8. **Launch container** — `docker run -it --rm` with worktree mounted at `/workspace`
-   and the repo's `.git` dir mounted at `/workspace/.git-main`. The entrypoint
+   and the repo's `.git` dir mounted at `/repo/.git`. The entrypoint
    rewrites the worktree's `.git` pointer to use the container path. Block until
    container exits.
 
@@ -81,11 +81,11 @@ that host path doesn't exist.
 
 **Solution:** The container mounts two volumes:
 - `.yolobox/<id>/` → `/workspace` (the worktree, read-write)
-- `.git/` → `/workspace/.git-main` (the main git dir, read-write)
+- `.git/` → `/repo/.git` (the main git dir, read-write)
 
 The entrypoint rewrites both pointers on startup:
-1. `/workspace/.git` → `gitdir: /workspace/.git-main/worktrees/<id>`
-2. `/workspace/.git-main/worktrees/<id>/gitdir` → `/workspace`
+1. `/workspace/.git` → `gitdir: /repo/.git/worktrees/<id>`
+2. `/repo/.git/worktrees/<id>/gitdir` → `/workspace`
 
 The `YOLOBOX_ID` env var is passed to the container so the entrypoint knows
 which worktree to fix up.
