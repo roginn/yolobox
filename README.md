@@ -1,27 +1,48 @@
 # yolobox
 
-Give [Claude Code](https://docs.anthropic.com/en/docs/claude-code) the `--dangerously-skip-permissions` flag and let it go absolutely feral — safely, inside a Docker container. Each yolobox gets its own git worktree and branch, so you can run multiple AI agents on the same repo in parallel without them stepping on each other's toes.
-
-You only live once. Might as well sandbox it.
-
-## Quick start
+Run [Claude Code](https://docs.anthropic.com/en/docs/claude-code) with `--dangerously-skip-permissions` in disposable Docker containers. Spin up as many as you want, let them run wild, merge the results.
 
 ```bash
-npx yolobox claude                       # YOLO — launch Claude with skip-permissions
-npx yolobox claude -p "fix the login bug" # YOLO with a mission
-npx yolobox start                         # Just give me a shell, I'll YOLO manually
+yolobox claude                           # Launch Claude with --dangerously-skip-permissions
+yolobox claude -p "fix the login bug"    # Launch with a prompt
+yolobox start                            # Drop into a shell instead
+yolobox ls                               # List running boxes
+yolobox attach                           # Reattach to a running box
+yolobox kill                             # Stop a box (keeps branch)
+yolobox rm                               # Remove box + branch + worktree
+yolobox nuke                             # Scorched earth — remove everything
 ```
 
-> Containers get randomly generated IDs like `swift-falcon` or `bold-otter` because every reckless experiment deserves a cool codename.
+## Install
+
+```bash
+npm install -g yolobox
+```
+
+Requires Docker and Node.js 18+.
+
+## What's a yolobox?
+
+A yolobox is three things, created together as a single unit:
+
+- **Docker container** — Claude can install packages, delete files, run arbitrary commands. Your host machine doesn't feel a thing.
+- **Git worktree** — an isolated copy of your codebase at `.yolobox/<id>`, separate from your working directory and from every other box.
+- **Git branch** — a `yolo/<id>` branch forked from HEAD. Every change is tracked and easy to review, merge, or throw away.
+
+Create a box, get all three. Remove a box, all three are cleaned up.
+
+`--dangerously-skip-permissions` makes Claude Code dramatically more productive, but running it on your actual machine requires a level of trust that borders on spiritual. And running *multiple* instances on the same repo? They'd all be editing the same files and tripping over each other.
+
+yolobox gives each Claude instance its own container (safety) and its own worktree (isolation). Open a few terminals, fire off parallel agents, and review the branches when they're done. Keep what works, toss what doesn't.
 
 ## Commands
 
 ### `yolobox claude [name] [-p <prompt>]`
 
-The main event. Spins up a fresh container and drops you straight into Claude Code with `--dangerously-skip-permissions` enabled. Claude can read, write, execute — no guardrails, no "are you sure?" popups. That's the whole point.
+The main event. Spins up a fresh yolobox and drops you straight into Claude Code with `--dangerously-skip-permissions`. Full send.
 
 ```bash
-yolobox claude                           # Interactive Claude session, full send
+yolobox claude                           # Interactive Claude session
 yolobox claude -p "refactor auth to JWT" # Give Claude a prompt and watch it go
 yolobox claude my-feature                # Use a custom name instead of a random one
 ```
@@ -62,7 +83,7 @@ bold-otter      yolo/bold-otter     stopped   2h ago      ~/code/myproject
 
 ### `yolobox kill [id]`
 
-Stop and remove a container. The worktree and branch stick around so you can still see what happened. Interactive picker if you don't specify an ID.
+Stop and remove a container. The worktree and branch stick around so you can still see what happened.
 
 ```bash
 yolobox kill                             # Pick one to kill
@@ -71,7 +92,7 @@ yolobox kill swift-falcon                # Kill a specific container
 
 ### `yolobox rm [id]`
 
-The full cleanup. Kills the container, removes the git worktree, and deletes the `yolo/*` branch. Like it never happened.
+The full cleanup. Kills the container, removes the git worktree, and deletes the `yolo/<id>` branch. Like it never happened.
 
 ```bash
 yolobox rm                               # Pick one to remove
@@ -80,27 +101,27 @@ yolobox rm swift-falcon                  # Remove everything for swift-falcon
 
 ### `yolobox nuke [--all]`
 
-For when you want to start completely fresh. Shows you everything that exists (containers, branches, worktrees) and lets you choose between killing just containers or going full scorched-earth.
+For when you want to start completely fresh. Shows you everything that exists (containers, branches, worktrees) and lets you choose between killing just containers or going full scorched-earth. No questions asked. (*)
 
 ```bash
 yolobox nuke                             # Nuke everything in the current repo
 yolobox nuke --all                       # Nuke yolobox containers from ALL repos
 ```
 
-## How it works
+(*) Actually we do ask for confirmation.
 
-When you run a command, yolobox:
+## Under the hood
 
-1. **Creates a git worktree** at `.yolobox/<id>` on a new branch `yolo/<id>`, forked from your current HEAD
+When you create a yolobox, the CLI:
+
+1. **Creates a git worktree** at `.yolobox/<id>` on a new `yolo/<id>` branch forked from HEAD
 2. **Launches a Docker container** that mounts the worktree as `/workspace` and shares your repo's `.git` directory
-3. **Forwards your git identity** so commits inside the container show up as you
-4. **Injects your Claude auth token** so there's no login prompt inside the container
-
-Each yolobox is fully isolated. Claude can `rm -rf` whatever it wants, install weird packages, rewrite your entire codebase — and it all stays contained in its own worktree and branch. Your main branch doesn't flinch.
+3. **Forwards your git identity** so commits show up as you
+4. **Injects your Claude auth token** so there's no login prompt
 
 ## Authentication
 
-Claude Code needs to authenticate inside each container. Set up a token once and yolobox handles the rest:
+Each container needs Claude Code authentication, but you only need to configure your token once — yolobox automatically injects it into every new container:
 
 ```bash
 # Step 1: Generate a long-lived token
@@ -123,39 +144,11 @@ yolobox auth --remove   # Remove stored token
 
 The token is saved to `~/.yolobox/auth.json` and automatically injected into every new container.
 
-## What's in the box
 
-The yolobox Docker image is based on Debian Bookworm and comes with everything Claude might need to be dangerous:
 
-- **Node.js 22** LTS + npm
-- **Python 3** + pip + venv
-- **Build tools** — gcc, g++, make, cmake
-- **Git** + **GitHub CLI** (`gh`)
-- **ripgrep** (`rg`) + **fd** — because Claude deserves fast search tools too
-- **vim**, curl, wget, jq, and other essentials
-- **Claude Code** — pre-installed via the official installer
-- Non-root `dev` user with passwordless `sudo`
 
-## Custom Docker image
 
-Want to bring your own container? Set the `YOLOBOX_IMAGE` env var:
 
-```bash
-YOLOBOX_IMAGE=my-custom-image:latest yolobox claude
-```
-
-Image resolution order:
-1. `YOLOBOX_IMAGE` env var (if set)
-2. `yolobox:local` (if you've built it locally)
-3. `ghcr.io/roginn/yolobox:latest` (default)
-
-## Install
-
-```bash
-npm install -g yolobox
-```
-
-Requires Docker and Node.js 18+.
 
 ## Development
 
@@ -168,6 +161,19 @@ npm run build                  # One-shot TypeScript build
 npm run dev                    # Watch mode
 npm test                       # Run tests
 ```
+
+### Custom Docker image
+
+Want to bring your own container? Set the `YOLOBOX_IMAGE` env var:
+
+```bash
+YOLOBOX_IMAGE=my-custom-image:latest yolobox claude
+```
+
+Image resolution order:
+1. `YOLOBOX_IMAGE` env var (if set)
+2. `yolobox:local` (if you've built it locally)
+3. `ghcr.io/roginn/yolobox:latest` (default)
 
 ## License
 
