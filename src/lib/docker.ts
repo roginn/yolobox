@@ -1,4 +1,4 @@
-import { execSync, spawnSync } from 'node:child_process'
+import { execSync, spawn, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -52,6 +52,62 @@ export function imageExists(imageName: string): boolean {
   } catch {
     return false
   }
+}
+
+export function pullImage(
+  imageName: string,
+  onProgress?: (message: string) => void,
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    const proc = spawn('docker', ['pull', imageName], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
+
+    const layers = new Map<string, string>()
+    let totalLayers = 0
+    let completedLayers = 0
+
+    const handleOutput = (data: Buffer) => {
+      const lines = data.toString().split(/\r?\n/)
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed) continue
+
+        // Match Docker layer status lines like "a2318d6c47ec: Pull complete"
+        const match = trimmed.match(/^([a-f0-9]{12}): (.+)$/)
+        if (match) {
+          const [, layerId, status] = match
+          const prevStatus = layers.get(layerId)
+          layers.set(layerId, status)
+
+          if (!prevStatus) {
+            totalLayers++
+          }
+
+          if (
+            (status === 'Pull complete' || status === 'Already exists') &&
+            prevStatus !== 'Pull complete' &&
+            prevStatus !== 'Already exists'
+          ) {
+            completedLayers++
+          }
+
+          if (onProgress && totalLayers > 0) {
+            onProgress(
+              `Pulling image (${completedLayers}/${totalLayers} layers)`,
+            )
+          }
+        }
+      }
+    }
+
+    proc.stdout?.on('data', handleOutput)
+    proc.stderr?.on('data', handleOutput)
+
+    proc.on('close', (code) => {
+      resolve(code === 0)
+    })
+  })
 }
 
 export function isYoloboxDevRepo(repoRoot: string): boolean {
