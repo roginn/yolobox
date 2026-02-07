@@ -10,11 +10,28 @@ function exec(cmd: string, cwd?: string): string {
   }).trim()
 }
 
-export function createWorktree(repoRoot: string, id: string): string {
+export function worktreeExists(repoRoot: string, id: string): boolean {
+  const worktreePath = path.join(repoRoot, '.yolobox', id)
+  return fs.existsSync(worktreePath)
+}
+
+export function createWorktree(
+  repoRoot: string,
+  id: string,
+  options?: { branchExists?: boolean },
+): string {
   const yoloboxDir = path.join(repoRoot, '.yolobox')
   fs.mkdirSync(yoloboxDir, { recursive: true })
   const worktreePath = path.join(yoloboxDir, id)
-  exec(`git worktree add "${worktreePath}" -b "yolo/${id}"`, repoRoot)
+
+  if (options?.branchExists) {
+    // Branch already exists — check it out into a new worktree
+    exec(`git worktree add "${worktreePath}" "yolo/${id}"`, repoRoot)
+  } else {
+    // Create a new branch
+    exec(`git worktree add "${worktreePath}" -b "yolo/${id}"`, repoRoot)
+  }
+
   return worktreePath
 }
 

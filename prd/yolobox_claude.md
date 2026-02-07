@@ -5,9 +5,10 @@
 Launches Claude Code with `--dangerously-skip-permissions` in a new Docker container with its own git worktree and branch.
 
 ```bash
-yolobox claude                       # Interactive Claude session
-yolobox claude -p "fix the login bug" # Start Claude with a prompt
-yolobox claude --name cool-tiger     # Use a specific ID instead of random
+yolobox claude                              # Interactive Claude session
+yolobox claude cool-tiger                   # Use a specific name instead of random
+yolobox claude cool-tiger -p "fix the bug"  # Name + prompt
+yolobox claude -p "fix the login bug"       # Prompt with random name
 ```
 
 ## Flow
@@ -28,12 +29,12 @@ yolobox claude --name cool-tiger     # Use a specific ID instead of random
    `claude --dangerously-skip-permissions` (optionally with `-p <prompt>`). Block until
    Claude session exits.
 
-## CLI Flags (MVP)
+## CLI Arguments & Flags (MVP)
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--prompt <text>` | `-p` | Pass an initial prompt to Claude |
-| `--name <id>` | `-n` | Use a specific name instead of random |
+| Argument/Flag | Required | Description |
+|---------------|----------|-------------|
+| `[name]` | No | Use a specific name instead of random (positional) |
+| `--prompt <text>` / `-p` | No | Pass an initial prompt to Claude |
 
 ## Deferred Flags
 

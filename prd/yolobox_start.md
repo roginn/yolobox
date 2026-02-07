@@ -6,7 +6,7 @@ Launches a bash shell in a new Docker container with its own git worktree and br
 
 ```bash
 yolobox start                   # Launch bash shell
-yolobox start --name cool-tiger # Use a specific ID instead of random
+yolobox start cool-tiger        # Use a specific name instead of random
 ```
 
 ## Flow
@@ -28,11 +28,11 @@ yolobox start --name cool-tiger # Use a specific ID instead of random
    rewrites the worktree's `.git` pointer to use the container path. Block until
    container exits.
 
-## CLI Flags (MVP)
+## CLI Arguments (MVP)
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--name <id>` | `-n` | Use a specific name instead of random |
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `[name]` | No | Use a specific name instead of random |
 
 ## Deferred Flags
 

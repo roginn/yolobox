@@ -47,6 +47,15 @@ export function createInitialCommit(): void {
   exec('git commit --allow-empty -m "Initial commit"')
 }
 
+export function branchExists(branch: string): boolean {
+  try {
+    exec(`git rev-parse --verify "refs/heads/${branch}"`)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function getGitIdentity(): { name: string; email: string } {
   try {
     const name = exec('git config user.name')

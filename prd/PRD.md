@@ -28,8 +28,8 @@ branch, so they never step on each other's toes.
 ## CLI Commands
 
 ```
-yolobox start [options]       Launch a shell in a new yolobox
-yolobox claude [options]    Launch Claude Code with skip permissions
+yolobox start [name]         Launch a shell in a new yolobox
+yolobox claude [name]        Launch Claude Code with skip permissions
 yolobox ls                  List active yoloboxes
 yolobox kill [id]           Stop and remove a yolobox (interactive picker if omitted)
 yolobox nuke                Kill all yoloboxes from the current directory
@@ -46,14 +46,14 @@ Launches a bash shell in a new sandboxed container.
 
 ```
 yolobox start                   Launch bash shell
-yolobox start --name cool-tiger Use a specific ID instead of random
+yolobox start cool-tiger        Use a specific name instead of random
 ```
 
-**Flags:**
+**Arguments:**
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--name <id>` | `-n` | Use a specific name instead of random |
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `[name]` | No | Use a specific name instead of random |
 
 **Deferred flags:**
 
@@ -68,17 +68,18 @@ yolobox start --name cool-tiger Use a specific ID instead of random
 Launches Claude Code with `--dangerously-skip-permissions` in a new sandboxed container.
 
 ```
-yolobox claude                       Interactive Claude session
-yolobox claude -p "fix the login bug" Start Claude with a prompt
-yolobox claude --name cool-tiger     Use a specific ID instead of random
+yolobox claude                              Interactive Claude session
+yolobox claude cool-tiger                   Use a specific name instead of random
+yolobox claude cool-tiger -p "fix the bug"  Name + prompt
+yolobox claude -p "fix the login bug"       Prompt with random name
 ```
 
-**Flags:**
+**Arguments & Flags:**
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--prompt <text>` | `-p` | Pass an initial prompt to Claude |
-| `--name <id>` | `-n` | Use a specific name instead of random |
+| Argument/Flag | Required | Description |
+|---------------|----------|-------------|
+| `[name]` | No | Use a specific name instead of random (positional) |
+| `--prompt <text>` / `-p` | No | Pass an initial prompt to Claude |
 
 **Deferred flags:**
 

@@ -1,3 +1,4 @@
+import path from 'node:path'
 import { resolveToken } from './auth'
 import * as docker from './docker'
 import * as git from './git'
@@ -64,9 +65,37 @@ export async function setupContainer(
     id = generateId(taken)
   }
 
-  // Create worktree
-  const worktreePath = worktree.createWorktree(repoRoot, id)
-  ui.success(`Created worktree .yolobox/${id} (branch: ${id})`)
+  // Check if a container with this name is already running
+  if (options.name) {
+    const containers = docker.listContainers()
+    const existing = containers.find((c) => c.id === id)
+    if (existing && existing.status === 'running') {
+      ui.error(
+        `Container "${id}" is already running. Use "yolobox attach ${id}" to connect.`,
+      )
+      process.exit(1)
+    }
+    // Clean up stopped container with same name so docker doesn't conflict
+    if (existing) {
+      docker.killContainer(id)
+    }
+  }
+
+  // Create or reuse worktree
+  let worktreePath: string
+  const worktreeAlreadyExists = worktree.worktreeExists(repoRoot, id)
+  const branchAlreadyExists = git.branchExists(`yolo/${id}`)
+
+  if (worktreeAlreadyExists) {
+    // Worktree already exists — reuse it
+    worktreePath = path.join(repoRoot, '.yolobox', id)
+    ui.success(`Reusing worktree .yolobox/${id} (branch: yolo/${id})`)
+  } else {
+    worktreePath = worktree.createWorktree(repoRoot, id, {
+      branchExists: branchAlreadyExists,
+    })
+    ui.success(`Created worktree .yolobox/${id} (branch: yolo/${id})`)
+  }
 
   // Ensure .gitignore
   worktree.ensureGitignore(repoRoot)

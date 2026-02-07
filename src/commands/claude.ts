@@ -15,13 +15,15 @@ export default defineCommand({
       description: 'Pass an initial prompt to Claude',
     },
     name: {
-      type: 'string',
-      alias: 'n',
+      type: 'positional',
       description: 'Use a specific name instead of random',
+      required: false,
     },
   },
   run: async ({ args }) => {
-    const { id } = await setupContainer({ name: args.name })
+    const { id } = await setupContainer({
+      name: args.name as string | undefined,
+    })
 
     // Build Claude command
     const command = args.prompt
