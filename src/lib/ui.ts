@@ -2,7 +2,7 @@ import * as p from '@clack/prompts'
 import pc from 'picocolors'
 
 export function intro() {
-  p.intro(pc.bgCyan(pc.black(' yolobox v0.0.1 ')))
+  p.intro(pc.bgCyan(pc.black(` yolobox v${__VERSION__} `)))
 }
 
 export function success(message: string) {

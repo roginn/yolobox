@@ -1,4 +1,5 @@
 import { defineConfig } from 'tsup'
+import { version } from './package.json'
 
 export default defineConfig({
   entry: ['src/index.ts'],
@@ -6,4 +7,5 @@ export default defineConfig({
   target: 'node18',
   clean: true,
   splitting: false,
+  define: { __VERSION__: JSON.stringify(version) },
 })

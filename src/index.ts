@@ -11,7 +11,7 @@ import run from './commands/run'
 const main = defineCommand({
   meta: {
     name: 'yolobox',
-    version: '0.0.1',
+    version: __VERSION__,
     description: 'Run Claude Code in Docker containers. YOLO safely.',
   },
   subCommands: {
