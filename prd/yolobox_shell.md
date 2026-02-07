@@ -2,7 +2,7 @@
 
 **Status:** This feature request has been superseded by the command refactoring.
 
-- `yolobox run` now launches a bash shell by default (was the original intent of this PRD)
+- `yolobox start` now launches a bash shell by default (was the original intent of this PRD)
 - For attaching to *existing* containers, a future `yolobox attach` command will handle that use case
 
 ## Original Context
@@ -40,7 +40,7 @@ Import and add `shell` to `subCommands`.
 
 ## Verification
 1. `npm run build` — compiles
-2. Start a container: `yolobox run --shell`, then exit
+2. Start a container: `yolobox start --shell`, then exit
 3. `yolobox shell <id>` — should attach bash to the running container
 4. `yolobox shell` (no args, one running) — should auto-select
 5. `yolobox shell` (no args, multiple running) — should show picker

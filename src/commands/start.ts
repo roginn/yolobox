@@ -5,7 +5,7 @@ import * as ui from '../lib/ui'
 
 export default defineCommand({
   meta: {
-    name: 'run',
+    name: 'start',
     description: 'Launch a shell in a new yolobox',
   },
   args: {

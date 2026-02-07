@@ -8,8 +8,8 @@
 - [ ] Implement `yolobox stop`
 - [ ] Implement `yolobox rm`
 - [ ] Implement `yolobox prune`
-- [ ] Add `--detach` flag to `yolobox run`
-- [ ] Add `--pull` flag to `yolobox run`
-- [ ] Add `--base` flag to `yolobox run`
+- [ ] Add `--detach` flag to `yolobox start`
+- [ ] Add `--pull` flag to `yolobox start`
+- [ ] Add `--base` flag to `yolobox start`
 - [ ] CI/CD workflows (ci.yml, docker-publish.yml, release.yml)
 - [ ] Image staleness checking (warn if >30 days old)

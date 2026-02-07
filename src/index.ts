@@ -6,7 +6,7 @@ import help from './commands/help'
 import kill from './commands/kill'
 import ls from './commands/ls'
 import nuke from './commands/nuke'
-import run from './commands/run'
+import start from './commands/start'
 
 const main = defineCommand({
   meta: {
@@ -16,7 +16,7 @@ const main = defineCommand({
   },
   subCommands: {
     auth,
-    run,
+    start,
     claude,
     attach,
     kill,

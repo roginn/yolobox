@@ -1,12 +1,12 @@
-# `yolobox run` — Feature Requirements
+# `yolobox start` — Feature Requirements
 
 ## What It Does
 
 Launches a bash shell in a new Docker container with its own git worktree and branch.
 
 ```bash
-yolobox run                   # Launch bash shell
-yolobox run --name cool-tiger # Use a specific ID instead of random
+yolobox start                   # Launch bash shell
+yolobox start --name cool-tiger # Use a specific ID instead of random
 ```
 
 ## Flow
@@ -52,7 +52,7 @@ Override via `YOLOBOX_IMAGE` env var.
 ## User-Visible Output
 
 ```
-$ yolobox run
+$ yolobox start
 
 ┌   yolobox v0.0.1
 │
@@ -94,7 +94,7 @@ which worktree to fix up.
 
 ## Implementation Files
 
-- `src/commands/run.ts` — Command orchestration
+- `src/commands/start.ts` — Command orchestration
 - `src/lib/docker.ts` — Docker check and container execution
 - `src/lib/git.ts` — Git repo checks and identity
 - `src/lib/worktree.ts` — Worktree creation and .gitignore management

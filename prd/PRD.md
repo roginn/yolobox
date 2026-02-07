@@ -6,14 +6,14 @@ agents can work on the same repo simultaneously without conflicts.
 
 ```bash
 npx yolobox claude              # Launch Claude with skip permissions
-npx yolobox run                 # Launch a bash shell
+npx yolobox start                 # Launch a bash shell
 ```
 
 ---
 
 ## Core Concept
 
-When you run `yolobox claude` (or `yolobox run`) inside a git repo:
+When you run `yolobox claude` (or `yolobox start`) inside a git repo:
 
 1. A human-friendly ID is generated (e.g., `swift-falcon`)
 2. A git worktree is created at `.yolobox/swift-falcon/` on branch `swift-falcon`
@@ -28,7 +28,7 @@ branch, so they never step on each other's toes.
 ## CLI Commands
 
 ```
-yolobox run [options]       Launch a shell in a new yolobox
+yolobox start [options]       Launch a shell in a new yolobox
 yolobox claude [options]    Launch Claude Code with skip permissions
 yolobox ls                  List active yoloboxes
 yolobox kill [id]           Stop and remove a yolobox (interactive picker if omitted)
@@ -40,13 +40,13 @@ yolobox rm <id>             Stop + remove worktree + delete branch
 yolobox prune               Clean up all stopped yoloboxes
 ```
 
-### `yolobox run`
+### `yolobox start`
 
 Launches a bash shell in a new sandboxed container.
 
 ```
-yolobox run                   Launch bash shell
-yolobox run --name cool-tiger Use a specific ID instead of random
+yolobox start                   Launch bash shell
+yolobox start --name cool-tiger Use a specific ID instead of random
 ```
 
 **Flags:**
@@ -105,7 +105,7 @@ $ yolobox claude
 ```
 
 ```
-$ yolobox run
+$ yolobox start
 
   yolobox v0.1.0
 
@@ -225,7 +225,7 @@ $ yolobox help
 
 Run Claude Code in Docker containers. YOLO safely. (yolobox v0.0.1)
 
-USAGE yolobox run|claude|kill|ls|help
+USAGE yolobox start|claude|kill|ls|help
 
 COMMANDS
 
@@ -306,7 +306,7 @@ my-project/                     ← user's repo (cwd)
 └── .gitignore                  ← .yolobox/ added here
 ```
 
-**On `yolobox run`:**
+**On `yolobox start`:**
 ```bash
 mkdir -p .yolobox
 git worktree add .yolobox/<id> -b <id>    # branch from HEAD (or --base)
@@ -413,7 +413,7 @@ yolobox/
 ├── src/                          # TypeScript source
 │   ├── index.ts                  # CLI entry point (command routing)
 │   ├── commands/
-│   │   ├── run.ts                # yolobox run (shell)
+│   │   ├── start.ts              # yolobox start (shell)
 │   │   ├── claude.ts             # yolobox claude (skip permissions)
 │   │   ├── ls.ts                 # yolobox ls
 │   │   ├── kill.ts               # yolobox kill
@@ -490,7 +490,7 @@ npm run dev
 npm link
 
 # Now test it:
-yolobox run
+yolobox start
 ```
 
 ### Building the Docker Image Locally
@@ -501,7 +501,7 @@ npm run docker:build
 
 # This builds docker/Dockerfile and tags it as yolobox:local
 # The CLI can be told to use a local image via:
-YOLOBOX_IMAGE=yolobox:local yolobox run
+YOLOBOX_IMAGE=yolobox:local yolobox start
 ```
 
 ### package.json Scripts
@@ -556,10 +556,10 @@ git push --follow-tags
 The CLI does **not** auto-update the Docker image (surprise downloads are
 bad UX). Instead:
 
-- `yolobox run --pull` explicitly pulls the latest image
+- `yolobox start --pull` explicitly pulls the latest image
 - If the cached image is >30 days old, print a hint:
   ```
-  hint: image is 42 days old. run yolobox run --pull to update
+  hint: image is 42 days old. run yolobox start --pull to update
   ```
 - On first run (no cached image), the pull happens automatically with a
   progress indicator
@@ -582,7 +582,7 @@ The CLI should fail gracefully with clear, actionable messages:
 
 ## Open Questions
 
-1. **Should `yolobox run` keep you attached (interactive) by default, or
+1. **Should `yolobox start` keep you attached (interactive) by default, or
    detach and let you `attach` later?** Current plan: interactive by default,
    `--detach` flag for background. This matches the "just run it" philosophy.
 

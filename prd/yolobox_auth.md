@@ -15,7 +15,7 @@ yolobox auth --remove      # Remove stored token
 
 1. **User generates token** — Run `claude setup-token` on the host machine to get a long-lived OAuth token.
 2. **User stores token** — Run `yolobox auth <token>` to save it to `~/.yolobox/auth.json`.
-3. **Container startup** — When `yolobox claude` or `yolobox run` creates a container, the token is passed as the `CLAUDE_CODE_OAUTH_TOKEN` environment variable.
+3. **Container startup** — When `yolobox claude` or `yolobox start` creates a container, the token is passed as the `CLAUDE_CODE_OAUTH_TOKEN` environment variable.
 4. **Entrypoint configuration** — The container's `entrypoint.sh` detects the token and merges `{"hasCompletedOnboarding": true, "theme": "dark"}` into `~/.claude.json` so Claude skips onboarding.
 5. **Claude authenticates** — Claude Code reads `CLAUDE_CODE_OAUTH_TOKEN` from the environment and authenticates without prompting.
 
