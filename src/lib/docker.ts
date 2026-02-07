@@ -116,6 +116,13 @@ export function startContainer(opts: ContainerOptions): boolean {
   return result.status === 0
 }
 
+export function restartContainer(id: string): boolean {
+  const result = spawnSync('docker', ['start', `yolobox-${id}`], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+  })
+  return result.status === 0
+}
+
 export function execInContainer(id: string, command: string[]): number {
   const args = buildExecArgs(id, command)
   const result = spawnSync('docker', args, { stdio: 'inherit' })
@@ -142,6 +149,17 @@ export function timeAgo(dateStr: string): string {
   return `${days}d ago`
 }
 
+function getWorktreeBranch(repoPath: string, id: string): string {
+  try {
+    const worktreePath = join(repoPath, '.yolobox', id)
+    return execSync(`git -C "${worktreePath}" rev-parse --abbrev-ref HEAD`, {
+      encoding: 'utf-8',
+    }).trim()
+  } catch {
+    return `yolo/${id}` // fallback to expected branch name
+  }
+}
+
 export function listContainers(): ContainerInfo[] {
   try {
     const result = execSync(
@@ -157,7 +175,7 @@ export function listContainers(): ContainerInfo[] {
         const id = name.replace(/^yolobox-/, '')
         return {
           id,
-          branch: id,
+          branch: getWorktreeBranch(path, id),
           status: status.startsWith('Up') ? 'running' : 'stopped',
           created: timeAgo(created),
           path: path || '',

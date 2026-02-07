@@ -25,10 +25,9 @@ export async function setupContainer(
 
   // Check Docker
   if (!docker.isDockerRunning()) {
-    ui.error('Docker is not running. Start Docker Desktop and try again.')
+    ui.error('Docker is not running. Start Docker and try again.')
     process.exit(1)
   }
-  ui.success('Docker is running')
 
   // Check git repo
   if (!git.isInsideGitRepo()) {
@@ -41,8 +40,6 @@ export async function setupContainer(
     }
     git.initRepo()
     ui.success('Initialized git repo')
-  } else {
-    ui.success('Git repo detected')
   }
 
   // Worktrees need at least one commit

@@ -6,11 +6,13 @@ vi.mock('../src/lib/docker', () => ({
   isDockerRunning: vi.fn(),
   listContainers: vi.fn(),
   execInContainer: vi.fn(),
+  restartContainer: vi.fn(),
 }))
 
 // Mock ui module
 vi.mock('../src/lib/ui', () => ({
   error: vi.fn(),
+  info: vi.fn(),
   outro: vi.fn(),
   prompts: {
     select: vi.fn(),
@@ -53,6 +55,7 @@ describe('yolobox attach', () => {
     vi.clearAllMocks()
     vi.mocked(docker.isDockerRunning).mockReturnValue(true)
     vi.mocked(docker.execInContainer).mockReturnValue(0)
+    vi.mocked(docker.restartContainer).mockReturnValue(true)
   })
 
   describe('with id provided', () => {
@@ -79,15 +82,34 @@ describe('yolobox attach', () => {
       expect(docker.execInContainer).not.toHaveBeenCalled()
     })
 
-    it('errors when container is stopped', async () => {
+    it('restarts a stopped container and attaches', async () => {
       vi.mocked(docker.listContainers).mockReturnValue([
         makeContainer({ id: 'swift-falcon', status: 'stopped' }),
       ])
 
       await runAttach('swift-falcon')
 
+      expect(ui.info).toHaveBeenCalledWith(
+        'Restarting stopped container "swift-falcon"...',
+      )
+      expect(docker.restartContainer).toHaveBeenCalledWith('swift-falcon')
+      expect(docker.execInContainer).toHaveBeenCalledWith('swift-falcon', [
+        'bash',
+      ])
+      expect(ui.outro).toHaveBeenCalledWith('Attaching to swift-falcon...')
+    })
+
+    it('errors when restart of stopped container fails', async () => {
+      vi.mocked(docker.listContainers).mockReturnValue([
+        makeContainer({ id: 'swift-falcon', status: 'stopped' }),
+      ])
+      vi.mocked(docker.restartContainer).mockReturnValue(false)
+
+      await runAttach('swift-falcon')
+
+      expect(docker.restartContainer).toHaveBeenCalledWith('swift-falcon')
       expect(ui.error).toHaveBeenCalledWith(
-        'Container "swift-falcon" is not running (status: stopped).',
+        'Failed to restart container "swift-falcon".',
       )
       expect(mockExit).toHaveBeenCalledWith(1)
       expect(docker.execInContainer).not.toHaveBeenCalled()

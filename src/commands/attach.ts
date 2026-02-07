@@ -55,8 +55,11 @@ export default defineCommand({
         return process.exit(1)
       }
       if (match.status !== 'running') {
-        ui.error(`Container "${id}" is not running (status: ${match.status}).`)
-        return process.exit(1)
+        ui.info(`Restarting stopped container "${id}"...`)
+        if (!docker.restartContainer(id)) {
+          ui.error(`Failed to restart container "${id}".`)
+          return process.exit(1)
+        }
       }
     }
 
