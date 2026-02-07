@@ -9,18 +9,17 @@ export function isDockerRunning(): boolean {
   }
 }
 
-export interface DockerRunOptions {
+export interface ContainerOptions {
   id: string
   worktreePath: string
   gitDir: string
   gitIdentity: { name: string; email: string }
   image: string
-  command: string[]
 }
 
-export function buildDockerArgs(opts: DockerRunOptions): string[] {
+export function buildDockerArgs(opts: ContainerOptions): string[] {
   const args: string[] = [
-    'run', '-it', '--rm',
+    'run', '-d',
     '--name', `yolobox-${opts.id}`,
     '-v', `${opts.worktreePath}:/workspace`,
     '-v', `${opts.gitDir}:/repo/.git`,
@@ -38,13 +37,30 @@ export function buildDockerArgs(opts: DockerRunOptions): string[] {
   }
 
   args.push(opts.image)
-  args.push(...opts.command)
+  args.push('sleep', 'infinity')
 
   return args
 }
 
-export function runContainer(opts: DockerRunOptions): number {
+export function buildExecArgs(id: string, command: string[]): string[] {
+  return ['exec', '-it', `yolobox-${id}`, ...command]
+}
+
+export function startContainer(opts: ContainerOptions): boolean {
   const args = buildDockerArgs(opts)
+  const result = spawnSync('docker', args, { stdio: ['pipe', 'pipe', 'pipe'] })
+  return result.status === 0
+}
+
+export function execInContainer(id: string, command: string[]): number {
+  const args = buildExecArgs(id, command)
   const result = spawnSync('docker', args, { stdio: 'inherit' })
   return result.status ?? 1
+}
+
+export function killContainer(id: string): boolean {
+  const stop = spawnSync('docker', ['stop', `yolobox-${id}`], { stdio: ['pipe', 'pipe', 'pipe'] })
+  if (stop.status !== 0) return false
+  const rm = spawnSync('docker', ['rm', `yolobox-${id}`], { stdio: ['pipe', 'pipe', 'pipe'] })
+  return rm.status === 0
 }

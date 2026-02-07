@@ -1,5 +1,6 @@
 import { defineCommand, runMain } from 'citty'
 import run from './commands/run'
+import kill from './commands/kill'
 
 const main = defineCommand({
   meta: {
@@ -9,6 +10,7 @@ const main = defineCommand({
   },
   subCommands: {
     run,
+    kill,
   },
 })
 

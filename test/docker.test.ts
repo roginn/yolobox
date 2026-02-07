@@ -1,14 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { buildDockerArgs, type DockerRunOptions } from '../src/lib/docker'
+import { buildDockerArgs, buildExecArgs, type ContainerOptions } from '../src/lib/docker'
 
-function makeOpts(overrides: Partial<DockerRunOptions> = {}): DockerRunOptions {
+function makeOpts(overrides: Partial<ContainerOptions> = {}): ContainerOptions {
   return {
     id: 'swift-falcon',
     worktreePath: '/home/user/project/.yolobox/swift-falcon',
     gitDir: '/home/user/project/.git',
     gitIdentity: { name: 'Test User', email: 'test@example.com' },
     image: 'yolobox:local',
-    command: ['claude', '--dangerously-skip-permissions'],
     ...overrides,
   }
 }
@@ -17,10 +16,15 @@ describe('buildDockerArgs', () => {
   it('produces correct base args', () => {
     const args = buildDockerArgs(makeOpts())
     expect(args).toContain('run')
-    expect(args).toContain('-it')
-    expect(args).toContain('--rm')
+    expect(args).toContain('-d')
     expect(args).toContain('--name')
     expect(args).toContain('yolobox-swift-falcon')
+  })
+
+  it('does not include -it or --rm', () => {
+    const args = buildDockerArgs(makeOpts())
+    expect(args).not.toContain('-it')
+    expect(args).not.toContain('--rm')
   })
 
   it('mounts worktree as /workspace', () => {
@@ -47,16 +51,10 @@ describe('buildDockerArgs', () => {
     expect(args).toContain('GIT_COMMITTER_EMAIL=test@example.com')
   })
 
-  it('uses shell command when specified', () => {
-    const args = buildDockerArgs(makeOpts({ command: ['bash'] }))
-    expect(args[args.length - 1]).toBe('bash')
-  })
-
-  it('ends with image and command', () => {
+  it('ends with image + sleep infinity', () => {
     const args = buildDockerArgs(makeOpts())
     const imageIdx = args.indexOf('yolobox:local')
-    expect(imageIdx).toBeGreaterThan(0)
-    expect(args.slice(imageIdx + 1)).toEqual(['claude', '--dangerously-skip-permissions'])
+    expect(args.slice(imageIdx)).toEqual(['yolobox:local', 'sleep', 'infinity'])
   })
 
   it('omits git identity env vars when empty', () => {
@@ -65,5 +63,17 @@ describe('buildDockerArgs', () => {
     }))
     const gitEnvs = args.filter(a => a.startsWith('GIT_AUTHOR') || a.startsWith('GIT_COMMITTER'))
     expect(gitEnvs).toHaveLength(0)
+  })
+})
+
+describe('buildExecArgs', () => {
+  it('produces correct exec args', () => {
+    const args = buildExecArgs('swift-falcon', ['claude', '--dangerously-skip-permissions'])
+    expect(args).toEqual(['exec', '-it', 'yolobox-swift-falcon', 'claude', '--dangerously-skip-permissions'])
+  })
+
+  it('works with shell command', () => {
+    const args = buildExecArgs('swift-falcon', ['bash'])
+    expect(args).toEqual(['exec', '-it', 'yolobox-swift-falcon', 'bash'])
   })
 })

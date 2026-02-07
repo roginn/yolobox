@@ -70,6 +70,20 @@ export default defineCommand({
     // Git identity
     const gitIdentity = git.getGitIdentity()
 
+    // Start container (detached)
+    const started = docker.startContainer({
+      id,
+      worktreePath,
+      gitDir,
+      gitIdentity,
+      image: DOCKER_IMAGE,
+    })
+
+    if (!started) {
+      ui.error('Failed to start container.')
+      process.exit(1)
+    }
+
     // Build command
     let command: string[]
     if (args.shell) {
@@ -82,16 +96,7 @@ export default defineCommand({
 
     ui.outro(`Launching ${id}...`)
 
-    // Run container (blocks until exit)
-    const exitCode = docker.runContainer({
-      id,
-      worktreePath,
-      gitDir,
-      gitIdentity,
-      image: DOCKER_IMAGE,
-      command,
-    })
-
-    process.exit(exitCode)
+    // Attach to container (blocks until session exits)
+    docker.execInContainer(id, command)
   },
 })
