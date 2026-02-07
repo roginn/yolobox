@@ -3,6 +3,7 @@ import run from './commands/run'
 import claude from './commands/claude'
 import kill from './commands/kill'
 import ls from './commands/ls'
+import help from './commands/help'
 
 const main = defineCommand({
   meta: {
@@ -15,6 +16,7 @@ const main = defineCommand({
     claude,
     kill,
     ls,
+    help,
   },
 })
 

@@ -32,6 +32,7 @@ yolobox run [options]       Launch a shell in a new yolobox
 yolobox claude [options]    Launch Claude Code with skip permissions
 yolobox ls                  List active yoloboxes
 yolobox kill <id>           Stop and remove a running yolobox
+yolobox help                Show help information
 yolobox attach <id>         Reattach to a running yolobox
 yolobox stop <id>           Stop a running yolobox
 yolobox rm <id>             Stop + remove worktree + delete branch
@@ -124,6 +125,28 @@ $ yolobox ls
   ID              BRANCH          STATUS     CREATED
   swift-falcon    swift-falcon    running    2 min ago
   clever-otter    clever-otter    stopped    1 hour ago
+```
+
+### `yolobox help`
+
+Displays help information. Shows the same output as `yolobox --help`.
+
+```
+$ yolobox help
+
+Run Claude Code in Docker containers. YOLO safely. (yolobox v0.0.1)
+
+USAGE yolobox run|claude|kill|ls|help
+
+COMMANDS
+
+     run    Launch a shell in a new yolobox
+  claude    Launch Claude Code with skip permissions
+    kill    Stop and remove a running yolobox container
+      ls    List running yolobox containers
+    help    Show help information
+
+Use yolobox <command> --help for more information about a command.
 ```
 
 ### `yolobox attach <id>`
@@ -305,6 +328,7 @@ yolobox/
 │   │   ├── claude.ts             # yolobox claude (skip permissions)
 │   │   ├── ls.ts                 # yolobox ls
 │   │   ├── kill.ts               # yolobox kill
+│   │   ├── help.ts               # yolobox help
 │   │   ├── attach.ts             # yolobox attach (planned)
 │   │   ├── stop.ts               # yolobox stop (planned)
 │   │   ├── rm.ts                 # yolobox rm (planned)
