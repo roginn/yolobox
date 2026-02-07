@@ -13,6 +13,34 @@ yolobox attach swift-falcon          # Attach to a specific container
 
 ---
 
+## Authentication
+
+Claude Code needs to authenticate inside each container. To avoid logging in every time, set up a long-lived token once:
+
+```bash
+# Step 1: Generate a token on your host machine
+claude setup-token
+
+# Step 2: Store it in yolobox
+yolobox auth <token>
+```
+
+Alternatively, if you have the `CLAUDE_CODE_OAUTH_TOKEN` environment variable set:
+
+```bash
+export CLAUDE_CODE_OAUTH_TOKEN=<token>
+yolobox auth
+```
+
+The token is saved to `~/.yolobox/auth.json` and automatically passed to new containers. You can check the current status or remove the token:
+
+```bash
+yolobox auth --status   # Show auth status
+yolobox auth --remove   # Remove stored token
+```
+
+---
+
 ## Development
 
 ### Setup

@@ -1,4 +1,5 @@
 import { defineCommand, runMain } from 'citty'
+import auth from './commands/auth'
 import attach from './commands/attach'
 import claude from './commands/claude'
 import help from './commands/help'
@@ -14,6 +15,7 @@ const main = defineCommand({
     description: 'Run Claude Code in Docker containers. YOLO safely.',
   },
   subCommands: {
+    auth,
     run,
     claude,
     attach,

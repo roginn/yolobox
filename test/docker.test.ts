@@ -14,9 +14,10 @@ import {
 } from '../src/lib/docker'
 
 vi.mock('node:child_process', async () => {
-  const actual = await vi.importActual<typeof import('node:child_process')>(
-    'node:child_process',
-  )
+  const actual =
+    await vi.importActual<typeof import('node:child_process')>(
+      'node:child_process',
+    )
   return {
     ...actual,
     execSync: vi.fn(actual.execSync),
@@ -125,6 +126,23 @@ describe('buildDockerArgs', () => {
       'sleep',
       'infinity',
     ])
+  })
+
+  it('includes CLAUDE_CODE_OAUTH_TOKEN when claudeOauthToken is set', () => {
+    const args = buildDockerArgs(
+      makeOpts({
+        claudeOauthToken: 'sk-ant-test-token-value',
+      }),
+    )
+    expect(args).toContain('CLAUDE_CODE_OAUTH_TOKEN=sk-ant-test-token-value')
+  })
+
+  it('omits CLAUDE_CODE_OAUTH_TOKEN when claudeOauthToken is undefined', () => {
+    const args = buildDockerArgs(makeOpts())
+    const hasClaudeToken = args.some((a) =>
+      a.startsWith('CLAUDE_CODE_OAUTH_TOKEN'),
+    )
+    expect(hasClaudeToken).toBe(false)
   })
 })
 
