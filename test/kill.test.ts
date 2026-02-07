@@ -102,12 +102,23 @@ describe('yolobox kill', () => {
   })
 
   describe('without id (interactive picker)', () => {
-    it('auto-selects when only one container exists', async () => {
+    it('shows picker even when only one container exists', async () => {
       vi.mocked(docker.listContainers).mockReturnValue([makeContainer()])
+      vi.mocked(ui.prompts.select).mockResolvedValue('swift-falcon')
+      vi.mocked(ui.prompts.isCancel).mockReturnValue(false)
 
       await runKill()
 
-      expect(ui.prompts.select).not.toHaveBeenCalled()
+      expect(ui.prompts.select).toHaveBeenCalledWith({
+        message: 'Pick a container to kill',
+        options: [
+          {
+            value: 'swift-falcon',
+            label: 'swift-falcon',
+            hint: 'running • /home/user/project',
+          },
+        ],
+      })
       expect(docker.killContainer).toHaveBeenCalledWith('swift-falcon')
       expect(ui.success).toHaveBeenCalledWith('Killed yolobox-swift-falcon')
     })

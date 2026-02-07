@@ -30,20 +30,16 @@ export default defineCommand({
         return process.exit(1)
       }
 
-      if (containers.length === 1) {
-        id = containers[0].id
-      } else {
-        const selected = await ui.prompts.select({
-          message: 'Pick a container to kill',
-          options: containers.map((c) => ({
-            value: c.id,
-            label: c.id,
-            hint: `${c.status} • ${c.path}`,
-          })),
-        })
-        if (ui.prompts.isCancel(selected)) return process.exit(0)
-        id = selected as string
-      }
+      const selected = await ui.prompts.select({
+        message: 'Pick a container to kill',
+        options: containers.map((c) => ({
+          value: c.id,
+          label: c.id,
+          hint: `${c.status} • ${c.path}`,
+        })),
+      })
+      if (ui.prompts.isCancel(selected)) return process.exit(0)
+      id = selected as string
     } else {
       const containers = docker.listContainers()
       const match = containers.find((c) => c.id === id)

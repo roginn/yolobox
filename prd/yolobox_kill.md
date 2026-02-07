@@ -14,10 +14,9 @@ yolobox kill swift-falcon      # Kill a specific container
 1. **Check Docker** — `docker info` silently. Fail with clear message if not running.
 2. **Resolve target container:**
    - **ID provided** — Look up the container in `listContainers()`. Validate it exists. Fail with clear message if not found.
-   - **No ID provided** — List all yolobox containers (both running and stopped):
+   - **No ID provided** — Always show interactive picker for safety (even if only one container exists):
      - If none exist → error message, exit.
-     - If exactly one → use it automatically (skip the picker).
-     - If multiple → show `@clack/prompts select` interactive picker with status and path hints.
+     - Show `@clack/prompts select` interactive picker with status and path hints.
 3. **Kill** — `docker stop yolobox-<id>` then `docker rm yolobox-<id>`.
 4. **Confirm** — Show success message or error if kill operation failed.
 
@@ -41,6 +40,10 @@ $ yolobox kill swift-falcon
 
 ```
 $ yolobox kill
+
+◆  Pick a container to kill
+│  ● swift-falcon  running • ~/projects/myapp
+└
 
 ✔  Killed yolobox-swift-falcon
 ```
@@ -73,6 +76,7 @@ $ yolobox kill
 - **Filter scope**: `attach` filters to running only, `kill` shows all containers (running + stopped).
 - **Validation**: `attach` validates running status, `kill` only validates existence.
 - **Picker hint**: Shows `status • path` to help distinguish containers.
+- **Safety**: `kill` always shows picker when no ID provided (even for single container), while `attach` auto-selects single running containers since attaching is non-destructive.
 
 ## Implementation Files
 

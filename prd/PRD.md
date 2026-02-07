@@ -132,20 +132,28 @@ $ yolobox ls
 
 Stops and removes a specific yolobox container by ID. Does not remove the worktree or branch.
 
-If no ID is provided, an interactive picker allows you to select from all available containers (both running and stopped).
+If no ID is provided, an interactive picker is always shown to confirm which container to kill (even if only one exists).
 
 ```
 $ yolobox kill swift-falcon
   ✓ Killed container swift-falcon
 ```
 
-**Interactive picker:**
+**Interactive picker (required for safety):**
 
 ```
 $ yolobox kill
   ? Pick a container to kill:
   ● swift-falcon (running • /Users/roger/projects/my-app)
   ○ clever-otter (stopped • /Users/roger/projects/my-app)
+```
+
+Even with a single container:
+
+```
+$ yolobox kill
+  ? Pick a container to kill:
+  ● swift-falcon (running • /Users/roger/projects/my-app)
 ```
 
 ### `yolobox nuke`
