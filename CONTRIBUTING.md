@@ -36,7 +36,7 @@ node bin/yolobox.js --help
 src/
   index.ts              # CLI entrypoint — citty main command with subcommands
   commands/
-    run.ts              # yolobox run — bash shell in container
+    start.ts            # yolobox start — bash shell in container
     claude.ts           # yolobox claude — Claude with --dangerously-skip-permissions
     ls.ts               # yolobox ls — list running containers
     kill.ts             # yolobox kill — stop and remove a container

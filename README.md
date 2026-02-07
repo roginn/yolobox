@@ -3,10 +3,10 @@
 Run Claude Code in Docker containers with `--dangerously-skip-permissions`. Each yolobox gets its own git worktree and branch, so multiple AI agents can work on the same repo simultaneously without conflicts.
 
 ```bash
-yolobox run                          # Interactive Claude session
-yolobox run -p "fix the login bug"   # Start Claude with a prompt
-yolobox run --shell                  # Drop into bash instead of Claude
-yolobox run --name cool-tiger        # Use a specific ID instead of random
+yolobox start                          # Interactive Claude session
+yolobox start -p "fix the login bug"   # Start Claude with a prompt
+yolobox start --shell                  # Drop into bash instead of Claude
+yolobox start --name cool-tiger        # Use a specific ID instead of random
 yolobox attach                       # Pick from running containers
 yolobox attach swift-falcon          # Attach to a specific container
 yolobox kill                         # Pick a container to kill
@@ -64,7 +64,7 @@ npm link
 
 ```bash
 # In this repo (or any git repo)
-yolobox run --shell
+yolobox start --shell
 ```
 
 This will:
