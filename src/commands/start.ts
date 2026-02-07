@@ -10,13 +10,15 @@ export default defineCommand({
   },
   args: {
     name: {
-      type: 'string',
-      alias: 'n',
+      type: 'positional',
       description: 'Use a specific name instead of random',
+      required: false,
     },
   },
   run: async ({ args }) => {
-    const { id } = await setupContainer({ name: args.name })
+    const { id } = await setupContainer({
+      name: args.name as string | undefined,
+    })
 
     ui.outro(`Launching shell in ${id}...`)
 
