@@ -6,6 +6,7 @@ import help from './commands/help'
 import kill from './commands/kill'
 import ls from './commands/ls'
 import nuke from './commands/nuke'
+import rm from './commands/rm'
 import start from './commands/start'
 
 const main = defineCommand({
@@ -23,6 +24,7 @@ const main = defineCommand({
     ls,
     help,
     nuke,
+    rm,
   },
 })
 
