@@ -77,6 +77,7 @@ export default defineCommand({
       gitDir,
       gitIdentity,
       image: DOCKER_IMAGE,
+      repoPath: repoRoot,
     })
 
     if (!started) {
