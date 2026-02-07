@@ -10,7 +10,7 @@ export function createWorktree(repoRoot: string, id: string): string {
   const yoloboxDir = path.join(repoRoot, '.yolobox')
   fs.mkdirSync(yoloboxDir, { recursive: true })
   const worktreePath = path.join(yoloboxDir, id)
-  exec(`git worktree add "${worktreePath}" -b "${id}"`, repoRoot)
+  exec(`git worktree add "${worktreePath}" -b "yolo/${id}"`, repoRoot)
   return worktreePath
 }
 
