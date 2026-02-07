@@ -1,3 +1,4 @@
+import { resolveToken } from './auth'
 import * as docker from './docker'
 import * as git from './git'
 import { generateId } from './id'
@@ -90,6 +91,14 @@ export async function setupContainer(
     }
   }
 
+  // Resolve Claude auth token
+  const claudeOauthToken = resolveToken()
+  if (claudeOauthToken) {
+    ui.success('Claude auth token configured')
+  } else {
+    ui.warn('No Claude auth token. Run "yolobox auth" to set up.')
+  }
+
   // Start container (detached)
   const started = docker.startContainer({
     id,
@@ -98,6 +107,7 @@ export async function setupContainer(
     gitIdentity,
     image: imageResolution.image,
     repoPath: repoRoot,
+    claudeOauthToken: claudeOauthToken ?? undefined,
   })
 
   if (!started) {

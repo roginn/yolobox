@@ -65,6 +65,7 @@ export interface ContainerOptions {
   gitIdentity: { name: string; email: string }
   image: string
   repoPath: string
+  claudeOauthToken?: string
 }
 
 export function buildDockerArgs(opts: ContainerOptions): string[] {
@@ -93,6 +94,10 @@ export function buildDockerArgs(opts: ContainerOptions): string[] {
   if (opts.gitIdentity.email) {
     args.push('-e', `GIT_AUTHOR_EMAIL=${opts.gitIdentity.email}`)
     args.push('-e', `GIT_COMMITTER_EMAIL=${opts.gitIdentity.email}`)
+  }
+
+  if (opts.claudeOauthToken) {
+    args.push('-e', `CLAUDE_CODE_OAUTH_TOKEN=${opts.claudeOauthToken}`)
   }
 
   args.push(opts.image)

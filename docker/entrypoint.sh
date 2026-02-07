@@ -21,4 +21,17 @@ if [ -n "${GIT_AUTHOR_EMAIL:-}" ]; then
   git config --global user.email "$GIT_AUTHOR_EMAIL"
 fi
 
+# When Claude auth token is set, ensure onboarding is marked complete
+# so Claude doesn't prompt for login or show the welcome screen.
+if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+  CLAUDE_JSON="$HOME/.claude.json"
+  DEFAULTS='{"hasCompletedOnboarding":true,"theme":"dark"}'
+  if [ -f "$CLAUDE_JSON" ]; then
+    jq -s '.[0] * .[1]' "$CLAUDE_JSON" <(echo "$DEFAULTS") > "${CLAUDE_JSON}.tmp" \
+      && mv "${CLAUDE_JSON}.tmp" "$CLAUDE_JSON"
+  else
+    echo "$DEFAULTS" > "$CLAUDE_JSON"
+  fi
+fi
+
 exec "$@"
