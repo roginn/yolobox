@@ -146,6 +146,7 @@ $ yolobox kill
   ? Pick a container to kill:
   ● swift-falcon (running • /Users/roger/projects/my-app)
   ○ clever-otter (stopped • /Users/roger/projects/my-app)
+  ○ Cancel (Exit without killing)
 ```
 
 Even with a single container:
@@ -154,6 +155,7 @@ Even with a single container:
 $ yolobox kill
   ? Pick a container to kill:
   ● swift-falcon (running • /Users/roger/projects/my-app)
+  ○ Cancel (Exit without killing)
 ```
 
 ### `yolobox nuke`

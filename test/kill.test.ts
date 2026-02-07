@@ -117,6 +117,11 @@ describe('yolobox kill', () => {
             label: 'swift-falcon',
             hint: 'running • /home/user/project',
           },
+          {
+            value: '__cancel__',
+            label: 'Cancel',
+            hint: 'Exit without killing',
+          },
         ],
       })
       expect(docker.killContainer).toHaveBeenCalledWith('swift-falcon')
@@ -150,6 +155,11 @@ describe('yolobox kill', () => {
             label: 'bold-otter',
             hint: 'stopped • /home/user/project2',
           },
+          {
+            value: '__cancel__',
+            label: 'Cancel',
+            hint: 'Exit without killing',
+          },
         ],
       })
       expect(docker.killContainer).toHaveBeenCalledWith('bold-otter')
@@ -181,6 +191,7 @@ describe('yolobox kill', () => {
         options: expect.arrayContaining([
           expect.objectContaining({ value: 'running-one' }),
           expect.objectContaining({ value: 'stopped-one' }),
+          expect.objectContaining({ value: '__cancel__', label: 'Cancel' }),
         ]),
       })
     })
@@ -242,9 +253,27 @@ describe('yolobox kill', () => {
             label: 'with-path',
             hint: 'running • /some/path',
           },
+          {
+            value: '__cancel__',
+            label: 'Cancel',
+            hint: 'Exit without killing',
+          },
         ],
       })
       expect(docker.killContainer).toHaveBeenCalledWith('no-path')
+    })
+
+    it('exits cleanly when Cancel is selected', async () => {
+      vi.mocked(docker.listContainers).mockReturnValue([
+        makeContainer({ id: 'swift-falcon' }),
+      ])
+      vi.mocked(ui.prompts.select).mockResolvedValue('__cancel__')
+      vi.mocked(ui.prompts.isCancel).mockReturnValue(false)
+
+      await runKill()
+
+      expect(mockExit).toHaveBeenCalledWith(0)
+      expect(docker.killContainer).not.toHaveBeenCalled()
     })
   })
 })

@@ -43,6 +43,7 @@ $ yolobox kill
 
 ◆  Pick a container to kill
 │  ● swift-falcon  running • ~/projects/myapp
+│  ○ Cancel  Exit without killing
 └
 
 ✔  Killed yolobox-swift-falcon
@@ -56,6 +57,7 @@ $ yolobox kill
 ◆  Pick a container to kill
 │  ● swift-falcon  running • ~/projects/myapp
 │  ○ bold-otter    stopped • ~/projects/myapp
+│  ○ Cancel  Exit without killing
 └
 
 ✔  Killed yolobox-swift-falcon
@@ -69,7 +71,8 @@ $ yolobox kill
 | ID not found | `No yolobox container found with ID "<id>".` |
 | No containers exist (no ID) | `No yolobox containers found.` |
 | Kill operation failed | `Failed to kill yolobox-<id>. Is it running?` |
-| User cancels picker | Exit silently with code 0. |
+| User cancels picker (Ctrl+C) | Exit silently with code 0. |
+| User selects Cancel option | Exit silently with code 0. |
 
 ## Differences from `attach`
 
