@@ -16,7 +16,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     zip \
     less \
-    vim-tiny \
+    vim \
+    tree \
     sudo \
     ripgrep \
     fd-find \
@@ -31,6 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Node.js 22 LTS
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get update \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
