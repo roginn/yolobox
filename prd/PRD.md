@@ -5,19 +5,20 @@ container. Each yolobox gets its own git worktree and branch, so multiple AI
 agents can work on the same repo simultaneously without conflicts.
 
 ```bash
-npx yolobox run
+npx yolobox claude              # Launch Claude with skip permissions
+npx yolobox run                 # Launch a bash shell
 ```
 
 ---
 
 ## Core Concept
 
-When you run `yolobox run` inside a git repo:
+When you run `yolobox claude` (or `yolobox run`) inside a git repo:
 
 1. A human-friendly ID is generated (e.g., `swift-falcon`)
 2. A git worktree is created at `.yolobox/swift-falcon/` on branch `swift-falcon`
 3. A Docker container spins up with that worktree mounted as `/workspace`
-4. Claude Code starts with `--dangerously-skip-permissions`
+4. Your chosen environment starts (Claude Code with `--dangerously-skip-permissions` or bash)
 
 You can spin up as many yoloboxes as you want — each one works on its own
 branch, so they never step on each other's toes.
@@ -27,8 +28,10 @@ branch, so they never step on each other's toes.
 ## CLI Commands
 
 ```
-yolobox run [options]       Launch a new yolobox
+yolobox run [options]       Launch a shell in a new yolobox
+yolobox claude [options]    Launch Claude Code with skip permissions
 yolobox ls                  List active yoloboxes
+yolobox kill <id>           Stop and remove a running yolobox
 yolobox attach <id>         Reattach to a running yolobox
 yolobox stop <id>           Stop a running yolobox
 yolobox rm <id>             Stop + remove worktree + delete branch
@@ -37,15 +40,35 @@ yolobox prune               Clean up all stopped yoloboxes
 
 ### `yolobox run`
 
-The main command. Launches a new sandboxed Claude Code session.
+Launches a bash shell in a new sandboxed container.
 
 ```
-yolobox run                          Interactive Claude session
-yolobox run -p "fix the login bug"   Start Claude with a prompt
-yolobox run --shell                  Drop into bash instead of Claude
-yolobox run --name cool-tiger        Use a specific ID instead of random
-yolobox run --detach                 Run in background (don't attach)
-yolobox run --pull                   Force-pull latest image before starting
+yolobox run                   Launch bash shell
+yolobox run --name cool-tiger Use a specific ID instead of random
+```
+
+**Flags:**
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--name <id>` | `-n` | Use a specific name instead of random |
+
+**Deferred flags:**
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--detach` | `-d` | Run in background, don't attach |
+| `--pull` | | Force-pull the latest Docker image |
+| `--base <ref>` | `-b` | Create worktree from this ref (default: HEAD) |
+
+### `yolobox claude`
+
+Launches Claude Code with `--dangerously-skip-permissions` in a new sandboxed container.
+
+```
+yolobox claude                       Interactive Claude session
+yolobox claude -p "fix the login bug" Start Claude with a prompt
+yolobox claude --name cool-tiger     Use a specific ID instead of random
 ```
 
 **Flags:**
@@ -53,8 +76,12 @@ yolobox run --pull                   Force-pull latest image before starting
 | Flag | Short | Description |
 |------|-------|-------------|
 | `--prompt <text>` | `-p` | Pass an initial prompt to Claude |
-| `--shell` | `-s` | Open bash shell instead of Claude |
 | `--name <id>` | `-n` | Use a specific name instead of random |
+
+**Deferred flags:**
+
+| Flag | Short | Description |
+|------|-------|-------------|
 | `--detach` | `-d` | Run in background, don't attach |
 | `--pull` | | Force-pull the latest Docker image |
 | `--base <ref>` | `-b` | Create worktree from this ref (default: HEAD) |
@@ -62,23 +89,31 @@ yolobox run --pull                   Force-pull latest image before starting
 **What the user sees:**
 
 ```
+$ yolobox claude
+
+  yolobox v0.1.0
+
+  ✓ Docker is running
+  ✓ Git repo detected
+  ✓ Created worktree .yolobox/swift-falcon (branch: swift-falcon)
+
+  Launching Claude in swift-falcon...
+
+> (Claude Code session starts with --dangerously-skip-permissions)
+```
+
+```
 $ yolobox run
 
   yolobox v0.1.0
 
   ✓ Docker is running
-  ✓ Image ghcr.io/roginn/yolobox:latest (cached)
-  ✓ Created worktree .yolobox/swift-falcon (branch: swift-falcon)
+  ✓ Git repo detected
+  ✓ Created worktree .yolobox/clever-otter (branch: clever-otter)
 
-  Launching swift-falcon...
+  Launching shell in clever-otter...
 
-  ╭──────────────────────────────────────────────╮
-  │  Claude Code (sandboxed)                     │
-  │  /workspace ← .yolobox/swift-falcon          │
-  │  branch: swift-falcon                        │
-  ╰──────────────────────────────────────────────╯
-
->
+dev@clever-otter:/workspace$ (bash shell)
 ```
 
 ### `yolobox ls`
@@ -266,13 +301,16 @@ yolobox/
 ├── src/                          # TypeScript source
 │   ├── index.ts                  # CLI entry point (command routing)
 │   ├── commands/
-│   │   ├── run.ts                # yolobox run
+│   │   ├── run.ts                # yolobox run (shell)
+│   │   ├── claude.ts             # yolobox claude (skip permissions)
 │   │   ├── ls.ts                 # yolobox ls
-│   │   ├── attach.ts             # yolobox attach
-│   │   ├── stop.ts               # yolobox stop
-│   │   ├── rm.ts                 # yolobox rm
-│   │   └── prune.ts              # yolobox prune
+│   │   ├── kill.ts               # yolobox kill
+│   │   ├── attach.ts             # yolobox attach (planned)
+│   │   ├── stop.ts               # yolobox stop (planned)
+│   │   ├── rm.ts                 # yolobox rm (planned)
+│   │   └── prune.ts              # yolobox prune (planned)
 │   └── lib/
+│       ├── container-setup.ts    # Shared setup logic for run/claude
 │       ├── docker.ts             # Docker interactions (run, ps, stop, pull)
 │       ├── worktree.ts           # Git worktree operations
 │       ├── id.ts                 # ID generation (adjective-noun)

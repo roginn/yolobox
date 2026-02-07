@@ -1,12 +1,13 @@
-# `yolobox run` — Feature Requirements
+# `yolobox claude` — Feature Requirements
 
 ## What It Does
 
-Launches a bash shell in a new Docker container with its own git worktree and branch.
+Launches Claude Code with `--dangerously-skip-permissions` in a new Docker container with its own git worktree and branch.
 
 ```bash
-yolobox run                   # Launch bash shell
-yolobox run --name cool-tiger # Use a specific ID instead of random
+yolobox claude                       # Interactive Claude session
+yolobox claude -p "fix the login bug" # Start Claude with a prompt
+yolobox claude --name cool-tiger     # Use a specific ID instead of random
 ```
 
 ## Flow
@@ -23,15 +24,15 @@ yolobox run --name cool-tiger # Use a specific ID instead of random
 7. **Git identity** — Read `user.name` and `user.email` from host's git config.
    Pass as env vars (`GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`,
    `GIT_COMMITTER_EMAIL`).
-8. **Launch container** — `docker run -it --rm` with worktree mounted at `/workspace`
-   and the repo's `.git` dir mounted at `/repo/.git`. The entrypoint
-   rewrites the worktree's `.git` pointer to use the container path. Block until
-   container exits.
+8. **Launch container** — Start container in detached mode, then exec into it with
+   `claude --dangerously-skip-permissions` (optionally with `-p <prompt>`). Block until
+   Claude session exits.
 
 ## CLI Flags (MVP)
 
 | Flag | Short | Description |
 |------|-------|-------------|
+| `--prompt <text>` | `-p` | Pass an initial prompt to Claude |
 | `--name <id>` | `-n` | Use a specific name instead of random |
 
 ## Deferred Flags
@@ -52,7 +53,7 @@ Override via `YOLOBOX_IMAGE` env var.
 ## User-Visible Output
 
 ```
-$ yolobox run
+$ yolobox claude
 
 ┌   yolobox v0.0.1
 │
@@ -62,27 +63,10 @@ $ yolobox run
 │
 ◆  Created worktree .yolobox/swift-falcon (branch: swift-falcon)
 │
-└  Launching shell in swift-falcon...
+└  Launching Claude in swift-falcon...
 
-dev@swift-falcon:/workspace$ (bash shell)
+> (Claude Code session starts with --dangerously-skip-permissions)
 ```
-
-## Git Worktree Path Fixup
-
-Git worktrees use a `.git` *file* (not directory) that contains an absolute path
-back to the main repo's `.git/worktrees/<id>` directory. Inside the container,
-that host path doesn't exist.
-
-**Solution:** The container mounts two volumes:
-- `.yolobox/<id>/` → `/workspace` (the worktree, read-write)
-- `.git/` → `/repo/.git` (the main git dir, read-write)
-
-The entrypoint rewrites both pointers on startup:
-1. `/workspace/.git` → `gitdir: /repo/.git/worktrees/<id>`
-2. `/repo/.git/worktrees/<id>/gitdir` → `/workspace`
-
-The `YOLOBOX_ID` env var is passed to the container so the entrypoint knows
-which worktree to fix up.
 
 ## Error Messages
 
@@ -94,11 +78,10 @@ which worktree to fix up.
 
 ## Implementation Files
 
-- `src/commands/run.ts` — Command orchestration
+- `src/commands/claude.ts` — Command implementation
+- `src/lib/container-setup.ts` — Shared container setup logic
 - `src/lib/docker.ts` — Docker check and container execution
 - `src/lib/git.ts` — Git repo checks and identity
 - `src/lib/worktree.ts` — Worktree creation and .gitignore management
 - `src/lib/id.ts` — ID generation with word lists
 - `src/lib/ui.ts` — Styled terminal output
-- `docker/Dockerfile` — Container image definition
-- `docker/entrypoint.sh` — Container startup script
