@@ -26,6 +26,24 @@ export function getBranches(): string[] {
   return output.split('\n').filter(Boolean)
 }
 
+export function initRepo(): void {
+  exec('git init')
+  createInitialCommit()
+}
+
+export function hasCommits(): boolean {
+  try {
+    exec('git rev-parse HEAD')
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function createInitialCommit(): void {
+  exec('git commit --allow-empty -m "Initial commit"')
+}
+
 export function getGitIdentity(): { name: string; email: string } {
   try {
     const name = exec('git config user.name')

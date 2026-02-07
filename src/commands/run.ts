@@ -41,10 +41,24 @@ export default defineCommand({
 
     // Check git repo
     if (!git.isInsideGitRepo()) {
-      ui.error('Not a git repo. yolobox needs git worktrees — run this inside a repo.')
-      process.exit(1)
+      const shouldInit = await ui.prompts.confirm({
+        message: 'No git repo found. Initialize one here?',
+      })
+      if (ui.prompts.isCancel(shouldInit) || !shouldInit) {
+        ui.error('yolobox needs a git repo for worktrees.')
+        process.exit(1)
+      }
+      git.initRepo()
+      ui.success('Initialized git repo')
+    } else {
+      ui.success('Git repo detected')
     }
-    ui.success('Git repo detected')
+
+    // Worktrees need at least one commit
+    if (!git.hasCommits()) {
+      git.createInitialCommit()
+      ui.success('Created initial commit')
+    }
 
     const repoRoot = git.getRepoRoot()
     const gitDir = git.getGitDir()
