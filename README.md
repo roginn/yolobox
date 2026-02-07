@@ -9,6 +9,8 @@ yolobox run --shell                  # Drop into bash instead of Claude
 yolobox run --name cool-tiger        # Use a specific ID instead of random
 yolobox attach                       # Pick from running containers
 yolobox attach swift-falcon          # Attach to a specific container
+yolobox kill                         # Pick a container to kill
+yolobox kill swift-falcon            # Kill a specific container
 ```
 
 ---

@@ -1,6 +1,6 @@
 import { defineCommand, runMain } from 'citty'
-import auth from './commands/auth'
 import attach from './commands/attach'
+import auth from './commands/auth'
 import claude from './commands/claude'
 import help from './commands/help'
 import kill from './commands/kill'

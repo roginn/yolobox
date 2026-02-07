@@ -31,10 +31,10 @@ branch, so they never step on each other's toes.
 yolobox run [options]       Launch a shell in a new yolobox
 yolobox claude [options]    Launch Claude Code with skip permissions
 yolobox ls                  List active yoloboxes
-yolobox kill <id>           Stop and remove a running yolobox
+yolobox kill [id]           Stop and remove a yolobox (interactive picker if omitted)
 yolobox nuke                Kill all yoloboxes from the current directory
 yolobox help                Show help information
-yolobox attach <id>         Reattach to a running yolobox
+yolobox attach [id]         Reattach to a running yolobox (interactive picker if omitted)
 yolobox stop <id>           Stop a running yolobox
 yolobox rm <id>             Stop + remove worktree + delete branch
 yolobox prune               Clean up all stopped yoloboxes
@@ -132,9 +132,30 @@ $ yolobox ls
 
 Stops and removes a specific yolobox container by ID. Does not remove the worktree or branch.
 
+If no ID is provided, an interactive picker is always shown to confirm which container to kill (even if only one exists).
+
 ```
 $ yolobox kill swift-falcon
   ✓ Killed container swift-falcon
+```
+
+**Interactive picker (required for safety):**
+
+```
+$ yolobox kill
+  ? Pick a container to kill:
+  ● swift-falcon (running • /Users/roger/projects/my-app)
+  ○ clever-otter (stopped • /Users/roger/projects/my-app)
+  ○ Cancel (Exit without killing)
+```
+
+Even with a single container:
+
+```
+$ yolobox kill
+  ? Pick a container to kill:
+  ● swift-falcon (running • /Users/roger/projects/my-app)
+  ○ Cancel (Exit without killing)
 ```
 
 ### `yolobox nuke`
