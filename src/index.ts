@@ -4,6 +4,7 @@ import claude from './commands/claude'
 import kill from './commands/kill'
 import ls from './commands/ls'
 import help from './commands/help'
+import nuke from './commands/nuke'
 
 const main = defineCommand({
   meta: {
@@ -17,6 +18,7 @@ const main = defineCommand({
     kill,
     ls,
     help,
+    nuke,
   },
 })
 

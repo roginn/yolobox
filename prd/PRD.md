@@ -32,6 +32,7 @@ yolobox run [options]       Launch a shell in a new yolobox
 yolobox claude [options]    Launch Claude Code with skip permissions
 yolobox ls                  List active yoloboxes
 yolobox kill <id>           Stop and remove a running yolobox
+yolobox nuke                Kill all yoloboxes from the current directory
 yolobox help                Show help information
 yolobox attach <id>         Reattach to a running yolobox
 yolobox stop <id>           Stop a running yolobox
@@ -126,6 +127,73 @@ $ yolobox ls
   swift-falcon    swift-falcon    running    2 min ago
   clever-otter    clever-otter    stopped    1 hour ago
 ```
+
+### `yolobox kill <id>`
+
+Stops and removes a specific yolobox container by ID. Does not remove the worktree or branch.
+
+```
+$ yolobox kill swift-falcon
+  ✓ Killed container swift-falcon
+```
+
+### `yolobox nuke`
+
+Kills all yolobox containers that were started from the current directory. Useful for bulk cleanup when multiple containers have been launched from the same repo.
+
+```
+$ yolobox nuke
+
+  yolobox nuke
+
+  Found 3 containers from /Users/roger/projects/my-app:
+
+    swift-falcon (swift-falcon) - running
+    clever-otter (clever-otter) - running
+    bold-cedar (bold-cedar) - running
+
+  ? Kill all 3 containers? › No / Yes
+
+  ✓ Killed container swift-falcon
+  ✓ Killed container clever-otter
+  ✓ Killed container bold-cedar
+
+  ✓ Successfully killed all 3 containers.
+```
+
+**Kill all containers from all directories:**
+
+```
+$ yolobox nuke --all
+
+  yolobox nuke
+
+  Found 8 containers across all directories:
+
+    swift-falcon (swift-falcon) - running [/Users/roger/projects/my-app]
+    clever-otter (clever-otter) - running [/Users/roger/projects/my-app]
+    bold-cedar (bold-cedar) - running [/Users/roger/projects/my-app]
+    wise-ember (wise-ember) - running [/Users/roger/projects/other-app]
+    calm-river (calm-river) - stopped [/Users/roger/projects/other-app]
+    ...
+
+  ? Kill all 8 containers? › No / Yes
+```
+
+**Flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--all` | Kill all yolobox containers from all directories (default: false) |
+
+The command:
+1. Checks if Docker is running
+2. Determines the current path (repo root if in a git repo, otherwise cwd) unless `--all` is used
+3. Lists all yolobox containers and filters to those matching the current path (or all if `--all`)
+4. Confirms with the user before proceeding
+5. Stops and removes each matching container
+
+If no matching containers are found, it displays an info message and exits.
 
 ### `yolobox help`
 
@@ -328,6 +396,7 @@ yolobox/
 │   │   ├── claude.ts             # yolobox claude (skip permissions)
 │   │   ├── ls.ts                 # yolobox ls
 │   │   ├── kill.ts               # yolobox kill
+│   │   ├── nuke.ts               # yolobox nuke
 │   │   ├── help.ts               # yolobox help
 │   │   ├── attach.ts             # yolobox attach (planned)
 │   │   ├── stop.ts               # yolobox stop (planned)
