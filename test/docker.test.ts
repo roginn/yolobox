@@ -1,12 +1,35 @@
+import { execSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { shortenPath } from '../src/commands/ls'
 import {
   buildDockerArgs,
   buildExecArgs,
   type ContainerOptions,
+  imageExists,
+  isYoloboxDevRepo,
+  resolveDockerImage,
   timeAgo,
 } from '../src/lib/docker'
+
+vi.mock('node:child_process', async () => {
+  const actual = await vi.importActual<typeof import('node:child_process')>(
+    'node:child_process',
+  )
+  return {
+    ...actual,
+    execSync: vi.fn(actual.execSync),
+  }
+})
+
+vi.mock('node:fs', async () => {
+  const actual = await vi.importActual<typeof import('node:fs')>('node:fs')
+  return {
+    ...actual,
+    existsSync: vi.fn(actual.existsSync),
+  }
+})
 
 function makeOpts(overrides: Partial<ContainerOptions> = {}): ContainerOptions {
   return {
@@ -88,6 +111,21 @@ describe('buildDockerArgs', () => {
     )
     expect(gitEnvs).toHaveLength(0)
   })
+
+  it('uses custom image when provided', () => {
+    const args = buildDockerArgs(
+      makeOpts({
+        image: 'ghcr.io/roginn/yolobox:latest',
+      }),
+    )
+    const imageIdx = args.indexOf('ghcr.io/roginn/yolobox:latest')
+    expect(imageIdx).toBeGreaterThan(-1)
+    expect(args.slice(imageIdx)).toEqual([
+      'ghcr.io/roginn/yolobox:latest',
+      'sleep',
+      'infinity',
+    ])
+  })
 })
 
 describe('buildExecArgs', () => {
@@ -158,5 +196,129 @@ describe('shortenPath', () => {
     expect(result).toMatch(/^…\//)
     expect(result).not.toContain(home)
     expect(result.length).toBeLessThanOrEqual(40)
+  })
+})
+
+describe('resolveDockerImage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('prioritizes env var over local and ghcr', () => {
+    vi.mocked(execSync).mockReturnValue('')
+    const result = resolveDockerImage({
+      envImage: 'custom:tag',
+      checkLocalImage: true,
+    })
+    expect(result).toEqual({
+      image: 'custom:tag',
+      source: 'env',
+    })
+  })
+
+  it('uses local image when it exists and env var not set', () => {
+    vi.mocked(execSync).mockReturnValue('')
+    const result = resolveDockerImage({
+      checkLocalImage: true,
+    })
+    expect(result).toEqual({
+      image: 'yolobox:local',
+      source: 'local',
+    })
+  })
+
+  it('falls back to GHCR when local does not exist', () => {
+    vi.mocked(execSync).mockImplementation(() => {
+      throw new Error('Image not found')
+    })
+    const result = resolveDockerImage({
+      checkLocalImage: true,
+    })
+    expect(result).toEqual({
+      image: 'ghcr.io/roginn/yolobox:latest',
+      source: 'ghcr',
+    })
+  })
+
+  it('skips local check when checkLocalImage is false', () => {
+    vi.mocked(execSync).mockReturnValue('')
+    const result = resolveDockerImage({
+      checkLocalImage: false,
+    })
+    expect(result).toEqual({
+      image: 'ghcr.io/roginn/yolobox:latest',
+      source: 'ghcr',
+    })
+  })
+
+  it('returns correct source value for env var', () => {
+    const result = resolveDockerImage({
+      envImage: 'alpine:latest',
+    })
+    expect(result.source).toBe('env')
+  })
+
+  it('returns correct source value for local', () => {
+    vi.mocked(execSync).mockReturnValue('')
+    const result = resolveDockerImage({})
+    expect(result.source).toBe('local')
+  })
+
+  it('returns correct source value for ghcr', () => {
+    vi.mocked(execSync).mockImplementation(() => {
+      throw new Error('Image not found')
+    })
+    const result = resolveDockerImage({})
+    expect(result.source).toBe('ghcr')
+  })
+
+  it('treats empty string env var as unset', () => {
+    vi.mocked(execSync).mockReturnValue('')
+    const result = resolveDockerImage({
+      envImage: '',
+      checkLocalImage: true,
+    })
+    expect(result).toEqual({
+      image: 'yolobox:local',
+      source: 'local',
+    })
+  })
+})
+
+describe('imageExists', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('returns true when image exists', () => {
+    vi.mocked(execSync).mockReturnValue('')
+    const result = imageExists('yolobox:local')
+    expect(result).toBe(true)
+  })
+
+  it('returns false when image does not exist', () => {
+    vi.mocked(execSync).mockImplementation(() => {
+      throw new Error('Image not found')
+    })
+    const result = imageExists('nonexistent:tag')
+    expect(result).toBe(false)
+  })
+})
+
+describe('isYoloboxDevRepo', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('returns true when docker/Dockerfile exists', () => {
+    vi.mocked(existsSync).mockReturnValue(true)
+    const result = isYoloboxDevRepo('/path/to/yolobox')
+    expect(result).toBe(true)
+  })
+
+  it('returns false when docker/Dockerfile does not exist', () => {
+    vi.mocked(existsSync).mockReturnValue(false)
+    const result = isYoloboxDevRepo('/path/to/other-project')
+    expect(result).toBe(false)
   })
 })

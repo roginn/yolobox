@@ -4,8 +4,6 @@ import { generateId } from './id'
 import * as ui from './ui'
 import * as worktree from './worktree'
 
-const DOCKER_IMAGE = process.env.YOLOBOX_IMAGE || 'yolobox:local'
-
 export interface SetupOptions {
   name?: string
 }
@@ -75,13 +73,30 @@ export async function setupContainer(
   // Git identity
   const gitIdentity = git.getGitIdentity()
 
+  // Resolve Docker image
+  const imageResolution = docker.resolveDockerImage({
+    envImage: process.env.YOLOBOX_IMAGE,
+  })
+
+  // Show which image we're using
+  if (imageResolution.source === 'env') {
+    ui.info(`Using custom Docker image: ${imageResolution.image}`)
+  } else if (imageResolution.source === 'local') {
+    ui.info('Using local Docker image: yolobox:local')
+  } else {
+    ui.info('Using Docker image: ghcr.io/roginn/yolobox:latest')
+    if (docker.isYoloboxDevRepo(repoRoot)) {
+      ui.info("Tip: Run 'npm run docker:build' to use local builds")
+    }
+  }
+
   // Start container (detached)
   const started = docker.startContainer({
     id,
     worktreePath,
     gitDir,
     gitIdentity,
-    image: DOCKER_IMAGE,
+    image: imageResolution.image,
     repoPath: repoRoot,
   })
 

@@ -1,4 +1,6 @@
 import { execSync, spawnSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 
 export function isDockerRunning(): boolean {
   try {
@@ -7,6 +9,53 @@ export function isDockerRunning(): boolean {
   } catch {
     return false
   }
+}
+
+export interface ImageResolution {
+  image: string
+  source: 'env' | 'local' | 'ghcr'
+}
+
+export function resolveDockerImage(options: {
+  envImage?: string
+  checkLocalImage?: boolean
+}): ImageResolution {
+  // Priority 1: Environment variable
+  if (options.envImage) {
+    return {
+      image: options.envImage,
+      source: 'env',
+    }
+  }
+
+  // Priority 2: Local image (if check enabled)
+  if (options.checkLocalImage !== false && imageExists('yolobox:local')) {
+    return {
+      image: 'yolobox:local',
+      source: 'local',
+    }
+  }
+
+  // Priority 3: GHCR fallback
+  return {
+    image: 'ghcr.io/roginn/yolobox:latest',
+    source: 'ghcr',
+  }
+}
+
+export function imageExists(imageName: string): boolean {
+  try {
+    execSync(`docker image inspect ${imageName}`, {
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function isYoloboxDevRepo(repoRoot: string): boolean {
+  return existsSync(join(repoRoot, 'docker', 'Dockerfile'))
 }
 
 export interface ContainerOptions {
