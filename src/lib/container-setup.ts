@@ -105,7 +105,7 @@ export async function setupContainer(
     envImage: process.env.YOLOBOX_IMAGE,
   })
 
-  // Show which image we're using
+  // Show which image we're using and pull if needed
   if (imageResolution.source === 'env') {
     ui.info(`Using custom Docker image: ${imageResolution.image}`)
   } else if (imageResolution.source === 'local') {
@@ -115,6 +115,21 @@ export async function setupContainer(
     if (docker.isYoloboxDevRepo(repoRoot)) {
       ui.info("Tip: Run 'npm run docker:build' to use local builds")
     }
+  }
+
+  // Pull image if not available locally
+  if (!docker.imageExists(imageResolution.image)) {
+    const spinner = ui.prompts.spinner()
+    spinner.start('Pulling image...')
+    const pulled = await docker.pullImage(imageResolution.image, (msg) =>
+      spinner.message(msg),
+    )
+    if (!pulled) {
+      spinner.stop('Failed to pull image', 1)
+      ui.error('Failed to pull Docker image.')
+      process.exit(1)
+    }
+    spinner.stop('Docker image pulled')
   }
 
   // Resolve Claude auth token
