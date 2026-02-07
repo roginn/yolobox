@@ -20,7 +20,8 @@
     "lint:fix": "biome check --write .",
     "test": "vitest",
     "docker:build": "docker build -t yolobox:local -f docker/Dockerfile docker/",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "postinstall": "lefthook install"
   },
   "dependencies": {
     "@clack/prompts": "^0.9.1",
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.3.14",
     "@types/node": "^22.0.0",
+    "lefthook": "^2.1.0",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0"
