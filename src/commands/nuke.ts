@@ -1,7 +1,7 @@
 import { defineCommand } from 'citty'
-import * as ui from '../lib/ui'
-import * as git from '../lib/git'
 import * as docker from '../lib/docker'
+import * as git from '../lib/git'
+import * as ui from '../lib/ui'
 
 export default defineCommand({
   meta: {
@@ -28,8 +28,8 @@ export default defineCommand({
     const allContainers = docker.listContainers()
 
     // Filter containers based on --all flag
-    let matchingContainers
-    let locationDescription
+    let matchingContainers: docker.ContainerInfo[]
+    let locationDescription: string
 
     if (args.all) {
       matchingContainers = allContainers
@@ -41,7 +41,7 @@ export default defineCommand({
         : process.cwd()
 
       matchingContainers = allContainers.filter(
-        (container) => container.path === currentPath
+        (container) => container.path === currentPath,
       )
       locationDescription = `from ${currentPath}`
     }
@@ -57,12 +57,12 @@ export default defineCommand({
 
     // Display list of containers to be killed
     console.log(
-      `\nFound ${matchingContainers.length} container${matchingContainers.length === 1 ? '' : 's'} ${locationDescription}:\n`
+      `\nFound ${matchingContainers.length} container${matchingContainers.length === 1 ? '' : 's'} ${locationDescription}:\n`,
     )
     for (const container of matchingContainers) {
       const pathDisplay = args.all ? ` [${container.path}]` : ''
       console.log(
-        `  ${container.id} (${container.branch}) - ${container.status}${pathDisplay}`
+        `  ${container.id} (${container.branch}) - ${container.status}${pathDisplay}`,
       )
     }
     console.log()
@@ -98,12 +98,12 @@ export default defineCommand({
     console.log()
     if (failureCount === 0) {
       ui.success(
-        `Successfully killed all ${successCount} container${successCount === 1 ? '' : 's'}.`
+        `Successfully killed all ${successCount} container${successCount === 1 ? '' : 's'}.`,
       )
       process.exit(0)
     } else {
       ui.error(
-        `Killed ${successCount} container${successCount === 1 ? '' : 's'}, but ${failureCount} failed.`
+        `Killed ${successCount} container${successCount === 1 ? '' : 's'}, but ${failureCount} failed.`,
       )
       process.exit(1)
     }

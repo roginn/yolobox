@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { generateId, ADJECTIVES, NOUNS } from '../src/lib/id'
+import { describe, expect, it } from 'vitest'
+import { ADJECTIVES, generateId, NOUNS } from '../src/lib/id'
 
 describe('generateId', () => {
   it('returns adjective-noun format', () => {

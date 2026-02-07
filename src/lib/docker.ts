@@ -20,13 +20,20 @@ export interface ContainerOptions {
 
 export function buildDockerArgs(opts: ContainerOptions): string[] {
   const args: string[] = [
-    'run', '-d',
-    '--name', `yolobox-${opts.id}`,
-    '-v', `${opts.worktreePath}:/workspace`,
-    '-v', `${opts.gitDir}:/repo/.git`,
-    '-e', `YOLOBOX_ID=${opts.id}`,
-    '--label', 'yolobox=true',
-    '--label', `yolobox.path=${opts.repoPath}`,
+    'run',
+    '-d',
+    '--name',
+    `yolobox-${opts.id}`,
+    '-v',
+    `${opts.worktreePath}:/workspace`,
+    '-v',
+    `${opts.gitDir}:/repo/.git`,
+    '-e',
+    `YOLOBOX_ID=${opts.id}`,
+    '--label',
+    'yolobox=true',
+    '--label',
+    `yolobox.path=${opts.repoPath}`,
   ]
 
   if (opts.gitIdentity.name) {
@@ -108,8 +115,12 @@ export function listContainers(): ContainerInfo[] {
 }
 
 export function killContainer(id: string): boolean {
-  const stop = spawnSync('docker', ['stop', `yolobox-${id}`], { stdio: ['pipe', 'pipe', 'pipe'] })
+  const stop = spawnSync('docker', ['stop', `yolobox-${id}`], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+  })
   if (stop.status !== 0) return false
-  const rm = spawnSync('docker', ['rm', `yolobox-${id}`], { stdio: ['pipe', 'pipe', 'pipe'] })
+  const rm = spawnSync('docker', ['rm', `yolobox-${id}`], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+  })
   return rm.status === 0
 }

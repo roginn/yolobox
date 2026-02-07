@@ -1,7 +1,12 @@
-import { describe, it, expect } from 'vitest'
 import { homedir } from 'node:os'
-import { buildDockerArgs, buildExecArgs, timeAgo, type ContainerOptions } from '../src/lib/docker'
+import { describe, expect, it } from 'vitest'
 import { shortenPath } from '../src/commands/ls'
+import {
+  buildDockerArgs,
+  buildExecArgs,
+  type ContainerOptions,
+  timeAgo,
+} from '../src/lib/docker'
 
 function makeOpts(overrides: Partial<ContainerOptions> = {}): ContainerOptions {
   return {
@@ -43,7 +48,9 @@ describe('buildDockerArgs', () => {
   it('mounts worktree as /workspace', () => {
     const args = buildDockerArgs(makeOpts())
     const vIdx = args.indexOf('-v')
-    expect(args[vIdx + 1]).toBe('/home/user/project/.yolobox/swift-falcon:/workspace')
+    expect(args[vIdx + 1]).toBe(
+      '/home/user/project/.yolobox/swift-falcon:/workspace',
+    )
   })
 
   it('mounts .git dir as /repo/.git', () => {
@@ -71,18 +78,31 @@ describe('buildDockerArgs', () => {
   })
 
   it('omits git identity env vars when empty', () => {
-    const args = buildDockerArgs(makeOpts({
-      gitIdentity: { name: '', email: '' },
-    }))
-    const gitEnvs = args.filter(a => a.startsWith('GIT_AUTHOR') || a.startsWith('GIT_COMMITTER'))
+    const args = buildDockerArgs(
+      makeOpts({
+        gitIdentity: { name: '', email: '' },
+      }),
+    )
+    const gitEnvs = args.filter(
+      (a) => a.startsWith('GIT_AUTHOR') || a.startsWith('GIT_COMMITTER'),
+    )
     expect(gitEnvs).toHaveLength(0)
   })
 })
 
 describe('buildExecArgs', () => {
   it('produces correct exec args', () => {
-    const args = buildExecArgs('swift-falcon', ['claude', '--dangerously-skip-permissions'])
-    expect(args).toEqual(['exec', '-it', 'yolobox-swift-falcon', 'claude', '--dangerously-skip-permissions'])
+    const args = buildExecArgs('swift-falcon', [
+      'claude',
+      '--dangerously-skip-permissions',
+    ])
+    expect(args).toEqual([
+      'exec',
+      '-it',
+      'yolobox-swift-falcon',
+      'claude',
+      '--dangerously-skip-permissions',
+    ])
   })
 
   it('works with shell command', () => {
@@ -124,7 +144,8 @@ describe('shortenPath', () => {
   })
 
   it('truncates long paths with …/', () => {
-    const long = '/very/deeply/nested/directory/structure/that/is/too/long/for/display'
+    const long =
+      '/very/deeply/nested/directory/structure/that/is/too/long/for/display'
     const result = shortenPath(long, 30)
     expect(result).toMatch(/^…\//)
     expect(result.length).toBeLessThanOrEqual(30)

@@ -1,8 +1,8 @@
-import * as ui from './ui'
-import * as git from './git'
 import * as docker from './docker'
-import * as worktree from './worktree'
+import * as git from './git'
 import { generateId } from './id'
+import * as ui from './ui'
+import * as worktree from './worktree'
 
 const DOCKER_IMAGE = process.env.YOLOBOX_IMAGE || 'yolobox:local'
 
@@ -18,7 +18,9 @@ export interface SetupResult {
 /**
  * Common setup for all yolobox commands: check docker, git, create worktree, start container
  */
-export async function setupContainer(options: SetupOptions = {}): Promise<SetupResult> {
+export async function setupContainer(
+  options: SetupOptions = {},
+): Promise<SetupResult> {
   ui.intro()
 
   // Check Docker

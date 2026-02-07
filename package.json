@@ -16,20 +16,23 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
     "test": "vitest",
     "docker:build": "docker build -t yolobox:local -f docker/Dockerfile docker/",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "citty": "^0.1.6",
     "@clack/prompts": "^0.9.1",
+    "citty": "^0.1.6",
     "picocolors": "^1.1.1"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
+    "@biomejs/biome": "^2.3.14",
+    "@types/node": "^22.0.0",
     "tsup": "^8.3.0",
-    "vitest": "^2.1.0",
-    "@types/node": "^22.0.0"
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
   },
   "repository": {
     "type": "git",

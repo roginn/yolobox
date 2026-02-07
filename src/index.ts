@@ -1,10 +1,10 @@
 import { defineCommand, runMain } from 'citty'
-import run from './commands/run'
 import claude from './commands/claude'
+import help from './commands/help'
 import kill from './commands/kill'
 import ls from './commands/ls'
-import help from './commands/help'
 import nuke from './commands/nuke'
+import run from './commands/run'
 
 const main = defineCommand({
   meta: {

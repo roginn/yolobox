@@ -1,7 +1,10 @@
 import { execSync } from 'node:child_process'
 
 function exec(cmd: string): string {
-  return execSync(cmd, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }).trim()
+  return execSync(cmd, {
+    encoding: 'utf-8',
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }).trim()
 }
 
 export function isInsideGitRepo(): boolean {

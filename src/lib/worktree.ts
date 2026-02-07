@@ -1,9 +1,13 @@
 import { execSync } from 'node:child_process'
-import path from 'node:path'
 import fs from 'node:fs'
+import path from 'node:path'
 
 function exec(cmd: string, cwd?: string): string {
-  return execSync(cmd, { encoding: 'utf-8', cwd, stdio: ['pipe', 'pipe', 'pipe'] }).trim()
+  return execSync(cmd, {
+    encoding: 'utf-8',
+    cwd,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  }).trim()
 }
 
 export function createWorktree(repoRoot: string, id: string): string {
@@ -31,7 +35,8 @@ export function ensureGitignore(repoRoot: string): void {
 export function getExistingWorktreeIds(repoRoot: string): string[] {
   const yoloboxDir = path.join(repoRoot, '.yolobox')
   if (!fs.existsSync(yoloboxDir)) return []
-  return fs.readdirSync(yoloboxDir, { withFileTypes: true })
-    .filter(d => d.isDirectory())
-    .map(d => d.name)
+  return fs
+    .readdirSync(yoloboxDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
 }

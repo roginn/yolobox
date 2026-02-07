@@ -1,6 +1,6 @@
 import { defineCommand } from 'citty'
-import * as ui from '../lib/ui'
 import * as docker from '../lib/docker'
+import * as ui from '../lib/ui'
 
 export default defineCommand({
   meta: {

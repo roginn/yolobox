@@ -1,12 +1,12 @@
 import { homedir } from 'node:os'
 import { defineCommand } from 'citty'
-import * as ui from '../lib/ui'
 import * as docker from '../lib/docker'
+import * as ui from '../lib/ui'
 
 export function shortenPath(path: string, maxLen = 40): string {
   // Replace $HOME with ~
   const home = homedir()
-  let display = path.startsWith(home) ? '~' + path.slice(home.length) : path
+  const display = path.startsWith(home) ? `~${path.slice(home.length)}` : path
 
   if (display.length <= maxLen) return display
 
@@ -45,13 +45,13 @@ export default defineCommand({
     const statusW = Math.max(8, ...containers.map((c) => c.status.length)) + 2
     const createdW = Math.max(9, ...containers.map((c) => c.created.length)) + 2
 
-    const header =
-      `${'ID'.padEnd(idW)}${'BRANCH'.padEnd(branchW)}${'STATUS'.padEnd(statusW)}${'CREATED'.padEnd(createdW)}PATH`
+    const header = `${'ID'.padEnd(idW)}${'BRANCH'.padEnd(branchW)}${'STATUS'.padEnd(statusW)}${'CREATED'.padEnd(createdW)}PATH`
     console.log(ui.colors.dim(header))
 
     for (let i = 0; i < containers.length; i++) {
       const c = containers[i]
-      const statusColor = c.status === 'running' ? ui.colors.green : ui.colors.yellow
+      const statusColor =
+        c.status === 'running' ? ui.colors.green : ui.colors.yellow
       console.log(
         `${c.id.padEnd(idW)}${c.branch.padEnd(branchW)}${statusColor(c.status.padEnd(statusW))}${ui.colors.dim(c.created.padEnd(createdW))}${ui.colors.dim(paths[i])}`,
       )

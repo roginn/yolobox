@@ -1,5 +1,5 @@
-import { defineCommand } from 'citty'
 import { spawnSync } from 'node:child_process'
+import { defineCommand } from 'citty'
 
 export default defineCommand({
   meta: {
