@@ -4,7 +4,7 @@
 - [x] Add `files` field to package.json
 - [ ] Publish Docker image to GHCR and switch default from `yolobox:local`
 - [ ] Implement `yolobox ls`
-- [ ] Implement `yolobox attach`
+- [x] Implement `yolobox attach`
 - [ ] Implement `yolobox stop`
 - [ ] Implement `yolobox rm`
 - [ ] Implement `yolobox prune`
