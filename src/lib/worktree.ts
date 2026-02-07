@@ -49,6 +49,24 @@ export function ensureGitignore(repoRoot: string): void {
   }
 }
 
+export function removeWorktree(repoRoot: string, id: string): boolean {
+  const worktreePath = path.join(repoRoot, '.yolobox', id)
+  try {
+    exec(`git worktree remove --force "${worktreePath}"`, repoRoot)
+    return true
+  } catch {
+    // Worktree directory may already be gone but still registered in git.
+    // Prune stale entries and clean up the directory if it lingers.
+    try {
+      exec('git worktree prune', repoRoot)
+    } catch {}
+    if (fs.existsSync(worktreePath)) {
+      fs.rmSync(worktreePath, { recursive: true, force: true })
+    }
+    return true
+  }
+}
+
 export function getExistingWorktreeIds(repoRoot: string): string[] {
   const yoloboxDir = path.join(repoRoot, '.yolobox')
   if (!fs.existsSync(yoloboxDir)) return []

@@ -56,6 +56,15 @@ export function branchExists(branch: string): boolean {
   }
 }
 
+export function deleteBranch(branch: string): boolean {
+  try {
+    exec(`git branch -D "${branch}"`)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function getGitIdentity(): { name: string; email: string } {
   try {
     const name = exec('git config user.name')
