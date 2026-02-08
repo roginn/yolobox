@@ -32,7 +32,9 @@ export default defineCommand({
         }
         ui.info(`Restarting stopped container "${args.name}"...`)
         if (!docker.restartContainer(args.name as string)) {
-          ui.error(`Failed to restart container "${args.name}".`)
+          ui.error(
+            `Failed to restart container "${args.name}". Run with --debug for details.`,
+          )
           return process.exit(1)
         }
         ui.outro(`Launching shell in ${args.name}...`)

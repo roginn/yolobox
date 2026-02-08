@@ -2,3 +2,4 @@ node_modules/
 dist/
 .yolobox/
 .claude/
+yolobox-debug.log

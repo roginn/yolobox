@@ -1,12 +1,16 @@
 import { execSync, spawn, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import * as debug from './debug'
 
 export function isDockerRunning(): boolean {
+  debug.log('Checking Docker status...')
   try {
     execSync('docker info', { stdio: ['pipe', 'pipe', 'pipe'] })
+    debug.log('Docker is running')
     return true
   } catch {
+    debug.error('Docker is not running or not installed')
     return false
   }
 }
@@ -44,12 +48,15 @@ export function resolveDockerImage(options: {
 }
 
 export function imageExists(imageName: string): boolean {
+  debug.log(`Checking if image exists: ${imageName}`)
   try {
     execSync(`docker image inspect ${imageName}`, {
       stdio: ['pipe', 'pipe', 'pipe'],
     })
+    debug.log(`Image found: ${imageName}`)
     return true
   } catch {
+    debug.log(`Image not found locally: ${imageName}`)
     return false
   }
 }
@@ -105,6 +112,9 @@ export function pullImage(
     proc.stderr?.on('data', handleOutput)
 
     proc.on('close', (code) => {
+      debug.log(
+        `Image pull ${code === 0 ? 'succeeded' : 'failed'}: ${imageName}`,
+      )
       resolve(code === 0)
     })
   })
@@ -112,6 +122,37 @@ export function pullImage(
 
 export function isYoloboxDevRepo(repoRoot: string): boolean {
   return existsSync(join(repoRoot, 'docker', 'Dockerfile'))
+}
+
+export function canDockerAccessPath(
+  hostFilePath: string,
+  image: string,
+): boolean {
+  debug.log(`Checking Docker file access for: ${hostFilePath}`)
+  try {
+    const result = spawnSync(
+      'docker',
+      [
+        'run',
+        '--rm',
+        '-v',
+        `${hostFilePath}:/test-file:ro`,
+        image,
+        'cat',
+        '/test-file',
+      ],
+      { stdio: ['pipe', 'pipe', 'pipe'], timeout: 10000 },
+    )
+    const ok = result.status === 0
+    if (!ok) {
+      debug.log(
+        `Docker cannot access path: ${result.stderr?.toString().trim()}`,
+      )
+    }
+    return ok
+  } catch {
+    return false
+  }
 }
 
 export interface ContainerOptions {
@@ -168,20 +209,35 @@ export function buildExecArgs(id: string, command: string[]): string[] {
 
 export function startContainer(opts: ContainerOptions): boolean {
   const args = buildDockerArgs(opts)
+  debug.log(`Starting container yolobox-${opts.id}`)
   const result = spawnSync('docker', args, { stdio: ['pipe', 'pipe', 'pipe'] })
+  const stdout = result.stdout?.toString() || ''
+  const stderr = result.stderr?.toString() || ''
+  debug.logCommand('docker', args, {
+    status: result.status,
+    stdout,
+    stderr,
+  })
   return result.status === 0
 }
 
 export function restartContainer(id: string): boolean {
-  const result = spawnSync('docker', ['start', `yolobox-${id}`], {
+  debug.log(`Restarting container yolobox-${id}`)
+  const args = ['start', `yolobox-${id}`]
+  const result = spawnSync('docker', args, {
     stdio: ['pipe', 'pipe', 'pipe'],
   })
+  const stdout = result.stdout?.toString() || ''
+  const stderr = result.stderr?.toString() || ''
+  debug.logCommand('docker', args, { status: result.status, stdout, stderr })
   return result.status === 0
 }
 
 export function execInContainer(id: string, command: string[]): number {
   const args = buildExecArgs(id, command)
+  debug.log(`Exec in container: docker ${args.join(' ')}`)
   const result = spawnSync('docker', args, { stdio: 'inherit' })
+  debug.log(`Exec exited with code ${result.status}`)
   return result.status ?? 1
 }
 
@@ -243,12 +299,25 @@ export function listContainers(): ContainerInfo[] {
 }
 
 export function killContainer(id: string): boolean {
-  const stop = spawnSync('docker', ['stop', `yolobox-${id}`], {
+  debug.log(`Killing container yolobox-${id}`)
+  const stopArgs = ['stop', `yolobox-${id}`]
+  const stop = spawnSync('docker', stopArgs, {
     stdio: ['pipe', 'pipe', 'pipe'],
   })
+  debug.logCommand('docker', stopArgs, {
+    status: stop.status,
+    stdout: stop.stdout?.toString() || '',
+    stderr: stop.stderr?.toString() || '',
+  })
   if (stop.status !== 0) return false
-  const rm = spawnSync('docker', ['rm', `yolobox-${id}`], {
+  const rmArgs = ['rm', `yolobox-${id}`]
+  const rm = spawnSync('docker', rmArgs, {
     stdio: ['pipe', 'pipe', 'pipe'],
+  })
+  debug.logCommand('docker', rmArgs, {
+    status: rm.status,
+    stdout: rm.stdout?.toString() || '',
+    stderr: rm.stderr?.toString() || '',
   })
   return rm.status === 0
 }
