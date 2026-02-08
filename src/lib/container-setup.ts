@@ -143,6 +143,29 @@ export async function setupContainer(
     spinner.stop('Docker image pulled')
   }
 
+  // Verify Docker can access the repo files (macOS may block iCloud Drive paths)
+  const testFile = path.join(gitDir, 'HEAD')
+  if (!docker.canDockerAccessPath(testFile, imageResolution.image)) {
+    ui.error('Docker cannot access files in this directory.')
+    if (
+      process.platform === 'darwin' &&
+      repoRoot.includes('/Library/Mobile Documents/')
+    ) {
+      ui.error(
+        'This repo is in iCloud Drive. Docker Desktop needs "Full Disk Access" to read these files.\n' +
+          '  → Open System Settings > Privacy & Security > Full Disk Access\n' +
+          '  → Enable Docker Desktop, then restart Docker.',
+      )
+    } else if (process.platform === 'darwin') {
+      ui.error(
+        'Docker Desktop may need "Full Disk Access" to read files in this location.\n' +
+          '  → Open System Settings > Privacy & Security > Full Disk Access\n' +
+          '  → Enable Docker Desktop, then restart Docker.',
+      )
+    }
+    process.exit(1)
+  }
+
   // Resolve Claude auth token
   const claudeOauthToken = resolveToken()
   if (claudeOauthToken) {

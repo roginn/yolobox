@@ -21,7 +21,7 @@ export function getRepoRoot(): string {
 }
 
 export function getGitDir(): string {
-  return exec('git rev-parse --git-dir')
+  return exec('git rev-parse --absolute-git-dir')
 }
 
 export function getBranches(): string[] {

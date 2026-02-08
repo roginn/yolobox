@@ -124,6 +124,37 @@ export function isYoloboxDevRepo(repoRoot: string): boolean {
   return existsSync(join(repoRoot, 'docker', 'Dockerfile'))
 }
 
+export function canDockerAccessPath(
+  hostFilePath: string,
+  image: string,
+): boolean {
+  debug.log(`Checking Docker file access for: ${hostFilePath}`)
+  try {
+    const result = spawnSync(
+      'docker',
+      [
+        'run',
+        '--rm',
+        '-v',
+        `${hostFilePath}:/test-file:ro`,
+        image,
+        'cat',
+        '/test-file',
+      ],
+      { stdio: ['pipe', 'pipe', 'pipe'], timeout: 10000 },
+    )
+    const ok = result.status === 0
+    if (!ok) {
+      debug.log(
+        `Docker cannot access path: ${result.stderr?.toString().trim()}`,
+      )
+    }
+    return ok
+  } catch {
+    return false
+  }
+}
+
 export interface ContainerOptions {
   id: string
   worktreePath: string
