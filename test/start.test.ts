@@ -110,7 +110,7 @@ describe('yolobox start', () => {
       await runStart('swift-falcon')
 
       expect(ui.error).toHaveBeenCalledWith(
-        'Failed to restart container "swift-falcon".',
+        'Failed to restart container "swift-falcon". Run with --debug for details.',
       )
       expect(mockExit).toHaveBeenCalledWith(1)
       expect(docker.execInContainer).not.toHaveBeenCalled()

@@ -1,5 +1,6 @@
 import path from 'node:path'
 import { resolveToken } from './auth'
+import * as debug from './debug'
 import * as docker from './docker'
 import * as git from './git'
 import { generateId } from './id'
@@ -22,6 +23,10 @@ export async function setupContainer(
   options: SetupOptions = {},
 ): Promise<SetupResult> {
   ui.intro()
+
+  if (debug.isEnabled()) {
+    ui.info(`Debug log: ${debug.getLogPath()}`)
+  }
 
   // Check Docker
   if (!docker.isDockerRunning()) {
@@ -50,6 +55,8 @@ export async function setupContainer(
 
   const repoRoot = git.getRepoRoot()
   const gitDir = git.getGitDir()
+  debug.log(`Repo root: ${repoRoot}`)
+  debug.log(`Git dir: ${gitDir}`)
 
   // Generate or validate ID
   let id: string
@@ -101,9 +108,13 @@ export async function setupContainer(
   const gitIdentity = git.getGitIdentity()
 
   // Resolve Docker image
+  debug.log('Resolving Docker image...')
   const imageResolution = docker.resolveDockerImage({
     envImage: process.env.YOLOBOX_IMAGE,
   })
+  debug.log(
+    `Resolved image: ${imageResolution.image} (source: ${imageResolution.source})`,
+  )
 
   // Show which image we're using and pull if needed
   if (imageResolution.source === 'env') {
@@ -141,6 +152,10 @@ export async function setupContainer(
   }
 
   // Start container (detached)
+  debug.log(`Starting container with id=${id}, image=${imageResolution.image}`)
+  debug.log(`Worktree path: ${worktreePath}`)
+  debug.log(`Git identity: ${gitIdentity.name} <${gitIdentity.email}>`)
+  debug.log(`Claude token: ${claudeOauthToken ? 'set' : 'not set'}`)
   const started = docker.startContainer({
     id,
     worktreePath,
@@ -152,7 +167,13 @@ export async function setupContainer(
   })
 
   if (!started) {
-    ui.error('Failed to start container.')
+    if (debug.isEnabled()) {
+      ui.error(
+        `Failed to start container. Check ${debug.getLogPath()} for details.`,
+      )
+    } else {
+      ui.error('Failed to start container. Run with --debug for details.')
+    }
     process.exit(1)
   }
 
