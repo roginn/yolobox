@@ -241,6 +241,21 @@ export function execInContainer(id: string, command: string[]): number {
   return result.status ?? 1
 }
 
+export function execInContainerNonInteractive(
+  id: string,
+  command: string[],
+): boolean {
+  const args = ['exec', `yolobox-${id}`, ...command]
+  debug.log(`Exec (non-interactive) in container: docker ${args.join(' ')}`)
+  const result = spawnSync('docker', args, { stdio: ['pipe', 'pipe', 'pipe'] })
+  debug.logCommand('docker', args, {
+    status: result.status,
+    stdout: result.stdout?.toString() || '',
+    stderr: result.stderr?.toString() || '',
+  })
+  return result.status === 0
+}
+
 export interface ContainerInfo {
   id: string
   branch: string

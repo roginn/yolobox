@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process'
+import { execSync, spawnSync } from 'node:child_process'
 
 function exec(cmd: string): string {
   return execSync(cmd, {
@@ -73,4 +73,30 @@ export function getGitIdentity(): { name: string; email: string } {
   } catch {
     return { name: '', email: '' }
   }
+}
+
+export function listUntrackedFiles(
+  repoRoot: string,
+  pathspec: string,
+): string[] {
+  const result = spawnSync(
+    'git',
+    [
+      '-C',
+      repoRoot,
+      'ls-files',
+      '--others',
+      '--exclude-standard',
+      '--',
+      pathspec,
+    ],
+    {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    },
+  )
+  if (result.status !== 0) return []
+  const output = result.stdout?.trim() ?? ''
+  if (!output) return []
+  return output.split('\n').filter(Boolean)
 }
