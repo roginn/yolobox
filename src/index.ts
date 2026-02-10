@@ -10,10 +10,19 @@ import rm from './commands/rm'
 import start from './commands/start'
 import * as debug from './lib/debug'
 
-// Parse --debug flag before citty processes argv
-const debugIndex = process.argv.indexOf('--debug')
-if (debugIndex !== -1) {
-  process.argv.splice(debugIndex, 1)
+// Parse global debug flags before citty processes argv.
+const debugFlagIndices = process.argv
+  .map((arg, index) => ({ arg, index }))
+  .filter((entry) => entry.arg === '--debug')
+  .map((entry) => entry.index)
+
+if (debugFlagIndices.length > 0) {
+  // Remove from right to left so indexes stay valid.
+  debugFlagIndices
+    .sort((a, b) => b - a)
+    .forEach((index) => {
+      process.argv.splice(index, 1)
+    })
   const logPath = debug.enable()
   debug.log(`yolobox v${__VERSION__}`)
   debug.log(`args: ${process.argv.slice(2).join(' ')}`)
@@ -27,7 +36,7 @@ const main = defineCommand({
   meta: {
     name: 'yolobox',
     version: __VERSION__,
-    description: 'Run Claude Code in Docker containers. YOLO safely.',
+    description: 'Run Claude Code in Docker containers or VMs. YOLO safely.',
   },
   subCommands: {
     auth,

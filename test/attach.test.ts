@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ContainerInfo } from '../src/lib/docker'
 
-// Mock docker module
 vi.mock('../src/lib/docker', () => ({
   isDockerRunning: vi.fn(),
   listContainers: vi.fn(),
@@ -9,10 +8,16 @@ vi.mock('../src/lib/docker', () => ({
   restartContainer: vi.fn(),
 }))
 
-// Mock ui module
+vi.mock('../src/lib/vm', () => ({
+  listVms: vi.fn(),
+  ensureVmRunningById: vi.fn(),
+  execInVm: vi.fn(),
+}))
+
 vi.mock('../src/lib/ui', () => ({
   error: vi.fn(),
   info: vi.fn(),
+  warn: vi.fn(),
   outro: vi.fn(),
   prompts: {
     select: vi.fn(),
@@ -20,7 +25,6 @@ vi.mock('../src/lib/ui', () => ({
   },
 }))
 
-// Mock process.exit to prevent test termination
 const mockExit = vi
   .spyOn(process, 'exit')
   .mockImplementation(() => undefined as never)
@@ -28,6 +32,7 @@ const mockExit = vi
 import attachCommand from '../src/commands/attach'
 import * as docker from '../src/lib/docker'
 import * as ui from '../src/lib/ui'
+import * as vm from '../src/lib/vm'
 
 function makeContainer(overrides: Partial<ContainerInfo> = {}): ContainerInfo {
   return {
@@ -56,170 +61,126 @@ describe('yolobox attach', () => {
     vi.mocked(docker.isDockerRunning).mockReturnValue(true)
     vi.mocked(docker.execInContainer).mockReturnValue(0)
     vi.mocked(docker.restartContainer).mockReturnValue(true)
+    vi.mocked(vm.listVms).mockReturnValue([])
+    vi.mocked(vm.execInVm).mockReturnValue(0)
   })
 
-  describe('with id provided', () => {
-    it('attaches to a running container', async () => {
-      vi.mocked(docker.listContainers).mockReturnValue([makeContainer()])
+  it('attaches to running docker box by id', async () => {
+    vi.mocked(docker.listContainers).mockReturnValue([makeContainer()])
 
-      await runAttach('swift-falcon')
+    await runAttach('swift-falcon')
 
-      expect(docker.execInContainer).toHaveBeenCalledWith('swift-falcon', [
-        'bash',
-      ])
-      expect(ui.outro).toHaveBeenCalledWith('Attaching to swift-falcon...')
-    })
-
-    it('errors when container id is not found', async () => {
-      vi.mocked(docker.listContainers).mockReturnValue([])
-
-      await runAttach('ghost-box')
-
-      expect(ui.error).toHaveBeenCalledWith(
-        'No yolobox container found with ID "ghost-box".',
-      )
-      expect(mockExit).toHaveBeenCalledWith(1)
-      expect(docker.execInContainer).not.toHaveBeenCalled()
-    })
-
-    it('restarts a stopped container and attaches', async () => {
-      vi.mocked(docker.listContainers).mockReturnValue([
-        makeContainer({ id: 'swift-falcon', status: 'stopped' }),
-      ])
-
-      await runAttach('swift-falcon')
-
-      expect(ui.info).toHaveBeenCalledWith(
-        'Restarting stopped container "swift-falcon"...',
-      )
-      expect(docker.restartContainer).toHaveBeenCalledWith('swift-falcon')
-      expect(docker.execInContainer).toHaveBeenCalledWith('swift-falcon', [
-        'bash',
-      ])
-      expect(ui.outro).toHaveBeenCalledWith('Attaching to swift-falcon...')
-    })
-
-    it('errors when restart of stopped container fails', async () => {
-      vi.mocked(docker.listContainers).mockReturnValue([
-        makeContainer({ id: 'swift-falcon', status: 'stopped' }),
-      ])
-      vi.mocked(docker.restartContainer).mockReturnValue(false)
-
-      await runAttach('swift-falcon')
-
-      expect(docker.restartContainer).toHaveBeenCalledWith('swift-falcon')
-      expect(ui.error).toHaveBeenCalledWith(
-        'Failed to restart container "swift-falcon".',
-      )
-      expect(mockExit).toHaveBeenCalledWith(1)
-      expect(docker.execInContainer).not.toHaveBeenCalled()
-    })
+    expect(docker.execInContainer).toHaveBeenCalledWith('swift-falcon', [
+      'bash',
+    ])
+    expect(ui.outro).toHaveBeenCalledWith(
+      'Attaching to swift-falcon (docker)...',
+    )
   })
 
-  describe('without id (interactive picker)', () => {
-    it('auto-selects when only one running container', async () => {
-      vi.mocked(docker.listContainers).mockReturnValue([makeContainer()])
+  it('errors when id is not found', async () => {
+    vi.mocked(docker.listContainers).mockReturnValue([])
 
-      await runAttach()
+    await runAttach('ghost-box')
 
-      expect(ui.prompts.select).not.toHaveBeenCalled()
-      expect(docker.execInContainer).toHaveBeenCalledWith('swift-falcon', [
-        'bash',
-      ])
-    })
-
-    it('shows picker when multiple running containers', async () => {
-      vi.mocked(docker.listContainers).mockReturnValue([
-        makeContainer({ id: 'swift-falcon', path: '/home/user/project' }),
-        makeContainer({ id: 'bold-otter', path: '/home/user/project' }),
-      ])
-      vi.mocked(ui.prompts.select).mockResolvedValue('bold-otter')
-      vi.mocked(ui.prompts.isCancel).mockReturnValue(false)
-
-      await runAttach()
-
-      expect(ui.prompts.select).toHaveBeenCalledWith({
-        message: 'Pick a container to attach to',
-        options: [
-          {
-            value: 'swift-falcon',
-            label: 'swift-falcon',
-            hint: '/home/user/project',
-          },
-          {
-            value: 'bold-otter',
-            label: 'bold-otter',
-            hint: '/home/user/project',
-          },
-        ],
-      })
-      expect(docker.execInContainer).toHaveBeenCalledWith('bold-otter', [
-        'bash',
-      ])
-    })
-
-    it('errors when no running containers', async () => {
-      vi.mocked(docker.listContainers).mockReturnValue([])
-
-      await runAttach()
-
-      expect(ui.error).toHaveBeenCalledWith(
-        'No running yolobox containers found.',
-      )
-      expect(mockExit).toHaveBeenCalledWith(1)
-      expect(docker.execInContainer).not.toHaveBeenCalled()
-    })
-
-    it('filters out stopped containers', async () => {
-      vi.mocked(docker.listContainers).mockReturnValue([
-        makeContainer({ id: 'swift-falcon', status: 'running' }),
-        makeContainer({ id: 'dead-parrot', status: 'stopped' }),
-      ])
-
-      await runAttach()
-
-      // Only one running container, so it should auto-select without picker
-      expect(ui.prompts.select).not.toHaveBeenCalled()
-      expect(docker.execInContainer).toHaveBeenCalledWith('swift-falcon', [
-        'bash',
-      ])
-    })
-
-    it('exits cleanly on picker cancel', async () => {
-      vi.mocked(docker.listContainers).mockReturnValue([
-        makeContainer({ id: 'swift-falcon' }),
-        makeContainer({ id: 'bold-otter' }),
-      ])
-      vi.mocked(ui.prompts.select).mockResolvedValue(Symbol('cancel'))
-      vi.mocked(ui.prompts.isCancel).mockReturnValue(true)
-
-      await runAttach()
-
-      expect(mockExit).toHaveBeenCalledWith(0)
-      expect(docker.execInContainer).not.toHaveBeenCalled()
-    })
+    expect(ui.error).toHaveBeenCalledWith(
+      'No yolobox found with ID "ghost-box".',
+    )
+    expect(mockExit).toHaveBeenCalledWith(1)
   })
 
-  describe('docker checks', () => {
-    it('errors when Docker is not running', async () => {
-      vi.mocked(docker.isDockerRunning).mockReturnValue(false)
+  it('restarts a stopped docker box and attaches', async () => {
+    vi.mocked(docker.listContainers).mockReturnValue([
+      makeContainer({ id: 'swift-falcon', status: 'stopped' }),
+    ])
 
-      await runAttach('swift-falcon')
+    await runAttach('swift-falcon')
 
-      expect(ui.error).toHaveBeenCalledWith('Docker is not running.')
-      expect(mockExit).toHaveBeenCalledWith(1)
-      expect(docker.execInContainer).not.toHaveBeenCalled()
-    })
+    expect(ui.info).toHaveBeenCalledWith(
+      'Restarting stopped container "swift-falcon"...',
+    )
+    expect(docker.restartContainer).toHaveBeenCalledWith('swift-falcon')
+    expect(docker.execInContainer).toHaveBeenCalledWith('swift-falcon', [
+      'bash',
+    ])
   })
 
-  describe('exit code forwarding', () => {
-    it('forwards the container exit code', async () => {
-      vi.mocked(docker.listContainers).mockReturnValue([makeContainer()])
-      vi.mocked(docker.execInContainer).mockReturnValue(42)
+  it('errors when restart fails', async () => {
+    vi.mocked(docker.listContainers).mockReturnValue([
+      makeContainer({ id: 'swift-falcon', status: 'stopped' }),
+    ])
+    vi.mocked(docker.restartContainer).mockReturnValue(false)
 
-      await runAttach('swift-falcon')
+    await runAttach('swift-falcon')
 
-      expect(mockExit).toHaveBeenCalledWith(42)
+    expect(ui.error).toHaveBeenCalledWith(
+      'Failed to restart container "swift-falcon".',
+    )
+    expect(mockExit).toHaveBeenCalledWith(1)
+  })
+
+  it('shows unified picker when multiple boxes are available', async () => {
+    vi.mocked(docker.listContainers).mockReturnValue([
+      makeContainer({ id: 'swift-falcon' }),
+      makeContainer({ id: 'bold-otter' }),
+    ])
+    vi.mocked(ui.prompts.select).mockResolvedValue('docker:bold-otter')
+    vi.mocked(ui.prompts.isCancel).mockReturnValue(false)
+
+    await runAttach()
+
+    expect(ui.prompts.select).toHaveBeenCalledWith({
+      message: 'Pick a yolobox to attach to',
+      options: [
+        {
+          value: 'docker:bold-otter',
+          label: 'bold-otter',
+          hint: 'docker • running • /home/user/project',
+        },
+        {
+          value: 'docker:swift-falcon',
+          label: 'swift-falcon',
+          hint: 'docker • running • /home/user/project',
+        },
+      ],
     })
+    expect(docker.execInContainer).toHaveBeenCalledWith('bold-otter', ['bash'])
+  })
+
+  it('errors when no boxes are available', async () => {
+    vi.mocked(docker.listContainers).mockReturnValue([])
+
+    await runAttach()
+
+    expect(ui.error).toHaveBeenCalledWith('No yoloboxes found.')
+    expect(mockExit).toHaveBeenCalledWith(1)
+  })
+
+  it('exits cleanly on picker cancel', async () => {
+    vi.mocked(docker.listContainers).mockReturnValue([
+      makeContainer({ id: 'swift-falcon' }),
+      makeContainer({ id: 'bold-otter' }),
+    ])
+    vi.mocked(ui.prompts.select).mockResolvedValue(Symbol('cancel'))
+    vi.mocked(ui.prompts.isCancel).mockReturnValue(true)
+
+    await runAttach()
+
+    expect(mockExit).toHaveBeenCalledWith(0)
+    expect(docker.execInContainer).not.toHaveBeenCalled()
+  })
+
+  it('warns when docker is down and backend defaults to all', async () => {
+    vi.mocked(docker.isDockerRunning).mockReturnValue(false)
+
+    await runAttach('swift-falcon')
+
+    expect(ui.warn).toHaveBeenCalledWith(
+      'Docker is not running. VM yoloboxes only.',
+    )
+    expect(ui.error).toHaveBeenCalledWith(
+      'No yolobox found with ID "swift-falcon".',
+    )
+    expect(mockExit).toHaveBeenCalledWith(1)
   })
 })

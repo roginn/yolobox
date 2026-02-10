@@ -1,14 +1,18 @@
 import { defineCommand } from 'citty'
+import type { BackendFilter } from '../lib/backend'
+import { resolveBackendFilter } from '../lib/backend'
+import { listBoxes, resolveBox } from '../lib/boxes'
 import * as docker from '../lib/docker'
 import * as git from '../lib/git'
 import * as ui from '../lib/ui'
+import * as vm from '../lib/vm'
 import * as worktree from '../lib/worktree'
 
 export default defineCommand({
   meta: {
     name: 'rm',
     description:
-      'Remove a yolobox: kill container, delete worktree, and delete branch',
+      'Remove a yolobox: stop backend instance, delete worktree, and delete branch',
   },
   args: {
     id: {
@@ -16,31 +20,62 @@ export default defineCommand({
       description: 'The yolobox ID to remove (interactive picker if omitted)',
       required: false,
     },
+    vm: {
+      type: 'boolean',
+      description: 'Use VM backend only',
+      default: false,
+    },
+    docker: {
+      type: 'boolean',
+      description: 'Use Docker backend only',
+      default: false,
+    },
   },
   run: async ({ args }) => {
-    if (!docker.isDockerRunning()) {
-      ui.error('Docker is not running.')
+    let backend: BackendFilter
+    try {
+      backend = resolveBackendFilter({
+        vm: Boolean(args.vm),
+        docker: Boolean(args.docker),
+      })
+    } catch (err) {
+      ui.error(err instanceof Error ? err.message : String(err))
       return process.exit(1)
     }
 
-    const repoRoot = git.getRepoRoot()
+    const inGitRepo = git.isInsideGitRepo()
+    const repoRoot = inGitRepo ? git.getRepoRoot() : null
+
+    const dockerRunning = docker.isDockerRunning()
+    if (backend === 'docker' && !dockerRunning) {
+      ui.error('Docker is not running.')
+      return process.exit(1)
+    }
+    if (backend === 'all' && !dockerRunning) {
+      ui.warn('Docker is not running. VM yoloboxes only.')
+    }
+
     let id = args.id as string | undefined
+    let box = null
 
     if (!id) {
-      const containers = docker.listContainers()
+      let boxes = listBoxes({ backend, dockerRunning })
+      if (repoRoot) {
+        boxes = boxes.filter((candidate) => candidate.path === repoRoot)
+      }
 
-      if (containers.length === 0) {
-        ui.error('No yolobox containers found.')
+      if (boxes.length === 0) {
+        ui.error('No yoloboxes found.')
         return process.exit(1)
       }
 
       const selected = await ui.prompts.select({
-        message: 'Pick a container to remove',
+        message: 'Pick a yolobox to remove',
         options: [
-          ...containers.map((c) => ({
-            value: c.id,
-            label: c.id,
-            hint: `${c.status} • ${c.path}`,
+          ...boxes.map((candidate) => ({
+            value: `${candidate.backend}:${candidate.id}`,
+            label: candidate.id,
+            hint: `${candidate.backend} • ${candidate.status} • ${candidate.path}`,
           })),
           {
             value: '__cancel__',
@@ -49,35 +84,77 @@ export default defineCommand({
           },
         ],
       })
+
       if (ui.prompts.isCancel(selected) || selected === '__cancel__') {
         return process.exit(0)
       }
-      id = selected as string
-    } else {
-      // Validate that at least one resource exists for this ID
-      const hasContainer = docker.listContainers().some((c) => c.id === id)
-      const hasWorktree = worktree.getExistingWorktreeIds(repoRoot).includes(id)
-      const hasBranch = git.getBranches().includes(`yolo/${id}`)
 
-      if (!hasContainer && !hasWorktree && !hasBranch) {
-        ui.error(`No yolobox found with ID "${id}".`)
+      const [selectedBackend, selectedId] = (selected as string).split(':')
+      box = resolveBox(selectedId, {
+        backend: selectedBackend === 'docker' ? 'docker' : 'vm',
+        dockerRunning,
+      })
+      id = selectedId
+    } else {
+      try {
+        box = resolveBox(id, { backend, dockerRunning })
+      } catch (err) {
+        ui.error(err instanceof Error ? err.message : String(err))
         return process.exit(1)
       }
     }
 
-    // 1. Kill the container (must go first since it mounts the worktree)
-    const killed = docker.killContainer(id)
-    if (killed) {
-      ui.success(`Killed container yolobox-${id}`)
+    if (!id) {
+      ui.error('Unable to resolve yolobox selection.')
+      return process.exit(1)
     }
 
-    // 2. Remove the git worktree
-    const removedWorktree = worktree.removeWorktree(repoRoot, id)
+    const canTouchGit = Boolean(repoRoot) && (!box || box.path === repoRoot)
+
+    const hasContainer =
+      box?.backend === 'docker' ||
+      (dockerRunning &&
+        backend !== 'vm' &&
+        docker.listContainers().some((container) => container.id === id))
+    const hasVm = box?.backend === 'vm' || vm.vmExists(id)
+    const hasWorktree = canTouchGit
+      ? worktree.getExistingWorktreeIds(repoRoot as string).includes(id)
+      : false
+    const hasBranch = canTouchGit
+      ? git.getBranches().includes(`yolo/${id}`)
+      : false
+
+    if (!hasContainer && !hasVm && !hasWorktree && !hasBranch) {
+      ui.error(`No yolobox found with ID "${id}".`)
+      return process.exit(1)
+    }
+
+    if (hasContainer) {
+      const killed = docker.killContainer(id)
+      if (killed) {
+        ui.success(`Killed container yolobox-${id}`)
+      }
+    }
+
+    if (hasVm) {
+      const removedVm = vm.removeVm(id)
+      if (removedVm) {
+        ui.success(`Removed VM yolobox-${id}`)
+      }
+    }
+
+    if (!canTouchGit) {
+      ui.warn(
+        'Skipping branch/worktree cleanup because this yolobox belongs to another repo.',
+      )
+      return
+    }
+
+    const removedWorktree = worktree.removeWorktree(repoRoot as string, id)
     if (removedWorktree) {
       ui.success(`Removed worktree .yolobox/${id}`)
     }
 
-    // 3. Delete the branch
     const branch = `yolo/${id}`
     const deletedBranch = git.deleteBranch(branch)
     if (deletedBranch) {
