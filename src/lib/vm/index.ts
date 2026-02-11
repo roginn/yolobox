@@ -19,7 +19,7 @@ import { ensureVmDirs } from './paths'
 import { listVmStates, readVmState, removeVmState, writeVmState } from './state'
 import type { VmEnsureOptions, VmExecOptions, VmInfo, VmState } from './types'
 
-const VM_SHELL_BOOTSTRAP = `export PATH="$HOME/.local/bin:$PATH"
+const VM_SHELL_BOOTSTRAP = `export PATH="/home/dev/.local/bin:$HOME/.local/bin:$PATH"
 if [ ! -x "$HOME/.local/bin/claude" ] && [ -x /home/dev/.local/bin/claude ]; then
   mkdir -p "$HOME/.local/bin"
   ln -sf /home/dev/.local/bin/claude "$HOME/.local/bin/claude" || true
@@ -86,8 +86,12 @@ function hasDangerousFlag(command: string[]): boolean {
 function normalizeCommand(command: string[]): string[] {
   if (command.length === 0) return command
 
-  if (command[0] === 'claude' && !hasDangerousFlag(command)) {
-    return ['claude', '--dangerously-skip-permissions', ...command.slice(1)]
+  if (command[0] === 'claude' || command[0] === '/home/dev/.local/bin/claude') {
+    const argsWithoutBinary = command.slice(1)
+    const normalizedArgs = hasDangerousFlag(command)
+      ? argsWithoutBinary
+      : ['--dangerously-skip-permissions', ...argsWithoutBinary]
+    return ['/home/dev/.local/bin/claude', ...normalizedArgs]
   }
 
   if (command.length === 1 && command[0] === 'bash') {

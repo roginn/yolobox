@@ -34,6 +34,12 @@ mountType: virtiofs
 containerd:
   system: false
   user: false
+portForwards:
+  - guestIP: "0.0.0.0"
+    guestIPMustBeZero: false
+    proto: any
+    guestPortRange: [1, 65535]
+    ignore: true
 provision:
   - mode: system
     script: |
