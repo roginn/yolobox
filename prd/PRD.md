@@ -40,6 +40,13 @@ yolobox rm <id>             Stop + remove worktree + delete branch
 yolobox prune               Clean up all stopped yoloboxes
 ```
 
+### Flag Naming Policy
+
+To avoid short-flag collisions as the CLI grows:
+
+- `--debug` is the diagnostics flag and intentionally has no short alias.
+- `-d` is reserved for daemon/detach behavior and must not be reused for debug.
+
 ### `yolobox start`
 
 Launches a bash shell in a new sandboxed container.

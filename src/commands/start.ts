@@ -1,7 +1,10 @@
 import { defineCommand } from 'citty'
 import { setupContainer } from '../lib/container-setup'
+import * as debug from '../lib/debug'
 import * as docker from '../lib/docker'
 import * as ui from '../lib/ui'
+import * as vm from '../lib/vm'
+import { setupVm } from '../lib/vm-setup'
 
 export default defineCommand({
   meta: {
@@ -14,8 +17,40 @@ export default defineCommand({
       description: 'Use a specific name instead of random',
       required: false,
     },
+    vm: {
+      type: 'boolean',
+      description: 'Run this yolobox in a VM instead of Docker',
+      default: false,
+    },
   },
   run: async ({ args }) => {
+    if (args.vm) {
+      try {
+        const { id, claudeOauthToken, gitIdentity } = await setupVm({
+          name: args.name as string | undefined,
+        })
+
+        ui.outro(`Launching shell in ${id}...`)
+        const exitCode = vm.execInVm(id, {
+          id,
+          command: ['bash'],
+          claudeOauthToken: claudeOauthToken ?? undefined,
+          gitIdentity,
+        })
+        return process.exit(exitCode)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        if (debug.isEnabled()) {
+          ui.error(
+            `VM start failed: ${message}\nDebug log: ${debug.getLogPath()}`,
+          )
+        } else {
+          ui.error(`VM start failed: ${message}\nRun again with --debug.`)
+        }
+        return process.exit(1)
+      }
+    }
+
     // If a name is provided, check if a container already exists and reuse it
     if (args.name) {
       if (!docker.isDockerRunning()) {
@@ -50,6 +85,7 @@ export default defineCommand({
     ui.outro(`Launching shell in ${id}...`)
 
     // Attach to container with bash (blocks until session exits)
-    docker.execInContainer(id, ['bash'])
+    const exitCode = docker.execInContainer(id, ['bash'])
+    process.exit(exitCode)
   },
 })
